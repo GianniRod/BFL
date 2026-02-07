@@ -113,7 +113,7 @@ function Liga() {
 
     return (
         <div className="liga-container">
-            <h2 className="liga-title">🏈 Liga BFL</h2>
+            <h2 className="liga-title">Temporada Regular</h2>
 
             <div className="year-selector">
                 <label>Temporada:</label>
