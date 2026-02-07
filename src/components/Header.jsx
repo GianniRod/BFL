@@ -9,9 +9,12 @@ function Header() {
             <nav>
                 <Link to="/">Equipos</Link>
                 <Link to="/fixture">Fixture</Link>
+                <Link to="/palmares">Palmares</Link>
+                <Link to="/liga">Liga</Link>
             </nav>
         </header>
     );
 }
 
 export default Header;
+
