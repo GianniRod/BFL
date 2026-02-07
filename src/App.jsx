@@ -4,6 +4,8 @@ import Header from './components/Header';
 import TeamsList from './components/TeamsList';
 import FixtureBuilder from './components/FixtureBuilder';
 import MatchList from './components/MatchList';
+import Palmares from './components/Palmares';
+import Liga from './components/Liga';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
                 <MatchList />
               </div>
             } />
+            <Route path="/palmares" element={<Palmares />} />
+            <Route path="/liga" element={<Liga />} />
           </Routes>
         </main>
       </div>
@@ -28,3 +32,4 @@ function App() {
 }
 
 export default App;
+
