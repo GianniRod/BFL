@@ -142,9 +142,10 @@
 }
 
 .standings-table .mini-logo {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
+    width: 28px;
+    height: 28px;
+    object-fit: cover;
+    border-radius: 50%;
 }
 
 .standings-table .points {
