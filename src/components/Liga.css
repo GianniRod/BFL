@@ -148,18 +148,31 @@
     border-radius: 50%;
 }
 
-.standings-table .points {
+.standings-table .pct {
     font-weight: bold;
-    font-size: 1.1rem;
-    color: #fff;
+    color: #d4af37;
 }
 
-.standings-table .positive {
+.last-results {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.result-dot {
+    font-size: 1.2rem;
+}
+
+.result-dot.win {
     color: #4caf50;
 }
 
-.standings-table .negative {
+.result-dot.loss {
     color: #f44336;
+}
+
+.standings-table tbody tr.playoff {
+    background: rgba(212, 175, 55, 0.1);
 }
 
 .edit-standings {
@@ -215,6 +228,49 @@
     padding: 5px;
     text-align: center;
     margin-top: 5px;
+}
+
+.results-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.results-buttons button {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.win-btn {
+    background: #1b5e20;
+    border: 1px solid #4caf50;
+    color: white;
+}
+
+.win-btn:hover {
+    background: #2e7d32;
+}
+
+.loss-btn {
+    background: #b71c1c;
+    border: 1px solid #f44336;
+    color: white;
+}
+
+.loss-btn:hover {
+    background: #c62828;
+}
+
+.clear-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #aaa;
+}
+
+.clear-btn:hover {
+    background: #444;
 }
 
 .loading {
