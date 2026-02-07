@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { subscribeToTeams } from '../services/db';
 import { db } from '../firebase';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import './Liga.css';
 
 const YEARS = [2024, 2025, 2026];
 
 function Liga() {
-    const [teams, setTeams] = useState([]);
     const [selectedYear, setSelectedYear] = useState(2026);
     const [leagueTeams, setLeagueTeams] = useState([]);
     const [standings, setStandings] = useState([]);
@@ -56,14 +55,15 @@ function Liga() {
         const existingStanding = standings.find(s => s.teamId === teamId);
         const updatedStanding = {
             teamId,
-            pj: 0, pg: 0, pe: 0, pp: 0, pf: 0, pc: 0,
+            v: 0, p: 0, pf: 0, pc: 0, lastResults: [],
             ...existingStanding,
-            [field]: parseInt(value) || 0
+            [field]: field === 'lastResults' ? value : (parseInt(value) || 0)
         };
 
         // Calculate derived values
-        updatedStanding.dif = updatedStanding.pf - updatedStanding.pc;
-        updatedStanding.pts = (updatedStanding.pg * 3) + updatedStanding.pe;
+        const totalGames = updatedStanding.v + updatedStanding.p;
+        updatedStanding.pct = totalGames > 0 ? (updatedStanding.v / totalGames).toFixed(3) : '0.000';
+        updatedStanding.np = updatedStanding.pf - updatedStanding.pc;
 
         const newStandings = standings.filter(s => s.teamId !== teamId);
         newStandings.push(updatedStanding);
@@ -72,25 +72,48 @@ function Liga() {
         await setDoc(docRef, { standings: newStandings }, { merge: true });
     };
 
+    const addResult = async (teamId, result) => {
+        const existingStanding = standings.find(s => s.teamId === teamId) || { lastResults: [] };
+        const currentResults = existingStanding.lastResults || [];
+        const newResults = [...currentResults, result].slice(-5); // Keep last 5
+        await updateStanding(teamId, 'lastResults', newResults);
+    };
+
+    const clearResults = async (teamId) => {
+        await updateStanding(teamId, 'lastResults', []);
+    };
+
     const getTeamById = (teamId) => allTeams.find(t => t.id === teamId);
 
-    // Get sorted standings for display
+    // Get sorted standings for display (by PCT descending, then by NP)
     const sortedStandings = [...standings]
         .sort((a, b) => {
-            if (b.pts !== a.pts) return b.pts - a.pts;
-            if (b.dif !== a.dif) return b.dif - a.dif;
-            return b.pf - a.pf;
+            const pctA = parseFloat(a.pct) || 0;
+            const pctB = parseFloat(b.pct) || 0;
+            if (pctB !== pctA) return pctB - pctA;
+            return (b.np || 0) - (a.np || 0);
         });
 
     const leagueTeamsData = leagueTeams
         .map(id => getTeamById(id))
         .filter(Boolean);
 
+    // Render last results as colored dots
+    const renderLastResults = (results = []) => {
+        return (
+            <div className="last-results">
+                {results.map((r, i) => (
+                    <span key={i} className={`result-dot ${r === 'W' ? 'win' : 'loss'}`}>●</span>
+                ))}
+            </div>
+        );
+    };
+
     if (loading) return <div className="loading">Cargando liga...</div>;
 
     return (
         <div className="liga-container">
-            <h2 className="liga-title">⚽ Liga BFL</h2>
+            <h2 className="liga-title">🏈 Liga BFL</h2>
 
             <div className="year-selector">
                 <label>Temporada:</label>
@@ -106,7 +129,7 @@ function Liga() {
                     className="config-btn"
                     onClick={() => setShowConfig(!showConfig)}
                 >
-                    {showConfig ? 'Cerrar Config' : '⚙️ Configurar Equipos'}
+                    {showConfig ? 'Cerrar Config' : '⚙️ Configurar'}
                 </button>
             </div>
 
@@ -131,7 +154,7 @@ function Liga() {
             {leagueTeamsData.length === 0 ? (
                 <div className="no-teams">
                     <p>No hay equipos configurados para la temporada {selectedYear}.</p>
-                    <p>Haz clic en "Configurar Equipos" para agregar equipos.</p>
+                    <p>Haz clic en "Configurar" para agregar equipos.</p>
                 </div>
             ) : (
                 <div className="standings-wrapper">
@@ -140,14 +163,11 @@ function Liga() {
                             <tr>
                                 <th>#</th>
                                 <th>Equipo</th>
-                                <th>PJ</th>
-                                <th>PG</th>
-                                <th>PE</th>
-                                <th>PP</th>
-                                <th>PF</th>
-                                <th>PC</th>
-                                <th>DIF</th>
-                                <th>PTS</th>
+                                <th>PCT</th>
+                                <th>V</th>
+                                <th>P</th>
+                                <th>NP</th>
+                                <th>Últ. Resultados</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -156,7 +176,7 @@ function Liga() {
                                     const team = getTeamById(standing.teamId);
                                     if (!team) return null;
                                     return (
-                                        <tr key={standing.teamId} className={index < 3 ? 'top-three' : ''}>
+                                        <tr key={standing.teamId} className={index < 4 ? 'playoff' : ''}>
                                             <td className="position">{index + 1}</td>
                                             <td className="team-cell">
                                                 {team['URL PHOTO'] && (
@@ -164,16 +184,13 @@ function Liga() {
                                                 )}
                                                 {team['Team Name']}
                                             </td>
-                                            <td>{standing.pj || 0}</td>
-                                            <td>{standing.pg || 0}</td>
-                                            <td>{standing.pe || 0}</td>
-                                            <td>{standing.pp || 0}</td>
-                                            <td>{standing.pf || 0}</td>
-                                            <td>{standing.pc || 0}</td>
-                                            <td className={standing.dif > 0 ? 'positive' : standing.dif < 0 ? 'negative' : ''}>
-                                                {standing.dif > 0 ? '+' : ''}{standing.dif || 0}
+                                            <td className="pct">{standing.pct || '0.000'}</td>
+                                            <td>{standing.v || 0}</td>
+                                            <td>{standing.p || 0}</td>
+                                            <td className={standing.np > 0 ? 'positive' : standing.np < 0 ? 'negative' : ''}>
+                                                {standing.np > 0 ? '+' : ''}{standing.np || 0}
                                             </td>
-                                            <td className="points">{standing.pts || 0}</td>
+                                            <td>{renderLastResults(standing.lastResults)}</td>
                                         </tr>
                                     );
                                 })
@@ -187,14 +204,11 @@ function Liga() {
                                             )}
                                             {team['Team Name']}
                                         </td>
+                                        <td className="pct">0.000</td>
                                         <td>0</td>
                                         <td>0</td>
                                         <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td className="points">0</td>
+                                        <td></td>
                                     </tr>
                                 ))
                             )}
@@ -211,12 +225,15 @@ function Liga() {
                                         <div key={team.id} className="team-stats-row">
                                             <span className="team-name">{team['Team Name']}</span>
                                             <div className="stats-inputs">
-                                                <label>PJ<input type="number" value={standing.pj || 0} onChange={(e) => updateStanding(team.id, 'pj', e.target.value)} /></label>
-                                                <label>PG<input type="number" value={standing.pg || 0} onChange={(e) => updateStanding(team.id, 'pg', e.target.value)} /></label>
-                                                <label>PE<input type="number" value={standing.pe || 0} onChange={(e) => updateStanding(team.id, 'pe', e.target.value)} /></label>
-                                                <label>PP<input type="number" value={standing.pp || 0} onChange={(e) => updateStanding(team.id, 'pp', e.target.value)} /></label>
-                                                <label>PF<input type="number" value={standing.pf || 0} onChange={(e) => updateStanding(team.id, 'pf', e.target.value)} /></label>
-                                                <label>PC<input type="number" value={standing.pc || 0} onChange={(e) => updateStanding(team.id, 'pc', e.target.value)} /></label>
+                                                <label>V<input type="number" min="0" value={standing.v || 0} onChange={(e) => updateStanding(team.id, 'v', e.target.value)} /></label>
+                                                <label>P<input type="number" min="0" value={standing.p || 0} onChange={(e) => updateStanding(team.id, 'p', e.target.value)} /></label>
+                                                <label>PF<input type="number" min="0" value={standing.pf || 0} onChange={(e) => updateStanding(team.id, 'pf', e.target.value)} /></label>
+                                                <label>PC<input type="number" min="0" value={standing.pc || 0} onChange={(e) => updateStanding(team.id, 'pc', e.target.value)} /></label>
+                                            </div>
+                                            <div className="results-buttons">
+                                                <button className="win-btn" onClick={() => addResult(team.id, 'W')}>+ Victoria</button>
+                                                <button className="loss-btn" onClick={() => addResult(team.id, 'L')}>+ Derrota</button>
+                                                <button className="clear-btn" onClick={() => clearResults(team.id)}>Limpiar</button>
                                             </div>
                                         </div>
                                     );
