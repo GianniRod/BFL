@@ -1,0 +1,223 @@
+.liga-container {
+    padding: 20px;
+}
+
+.liga-title {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.year-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.year-selector label {
+    font-weight: bold;
+}
+
+.year-selector select {
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 8px;
+}
+
+.config-btn {
+    background: #333;
+    border: 1px solid #555;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.config-btn:hover {
+    background: #444;
+    border-color: #777;
+}
+
+.config-panel {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.config-panel h3 {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.teams-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.team-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #222;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.team-checkbox:hover {
+    background: #333;
+}
+
+.team-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #d4af37;
+}
+
+.no-teams {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+}
+
+.standings-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.standings-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #0d0d0d;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.standings-table th,
+.standings-table td {
+    padding: 12px 8px;
+    text-align: center;
+    border-bottom: 1px solid #222;
+}
+
+.standings-table th {
+    background: #1a1a1a;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.standings-table tbody tr {
+    transition: background 0.3s;
+}
+
+.standings-table tbody tr:hover {
+    background: #1a1a1a;
+}
+
+.standings-table tbody tr.top-three {
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.standings-table .position {
+    font-weight: bold;
+    color: #d4af37;
+}
+
+.standings-table .team-cell {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.standings-table .mini-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.standings-table .points {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #fff;
+}
+
+.standings-table .positive {
+    color: #4caf50;
+}
+
+.standings-table .negative {
+    color: #f44336;
+}
+
+.edit-standings {
+    margin-top: 30px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.edit-standings h4 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.stats-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.team-stats-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    padding: 10px;
+    background: #222;
+    border-radius: 8px;
+}
+
+.team-stats-row .team-name {
+    min-width: 150px;
+    font-weight: bold;
+}
+
+.stats-inputs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.stats-inputs label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.stats-inputs input {
+    width: 50px;
+    padding: 5px;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+}
