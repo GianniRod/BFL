@@ -319,10 +319,150 @@
     padding: 30px;
 }
 
-.fechas-list {
+/* Carousel Navigation */
+.fechas-carousel {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.carousel-nav {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 15px;
+    padding: 15px 20px;
+    background: #222;
+    border-bottom: 1px solid #333;
+}
+
+.carousel-arrow {
+    background: transparent;
+    border: 2px solid #d4af37;
+    color: #d4af37;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    line-height: 1;
+}
+
+.carousel-arrow:hover:not(:disabled) {
+    background: #d4af37;
+    color: #000;
+}
+
+.carousel-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.fecha-selector {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.fecha-selector .fecha-nombre-input {
+    font-weight: bold;
+    font-size: 1.3rem;
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    color: white;
+    text-align: center;
+    min-width: 150px;
+    cursor: pointer;
+}
+
+.fecha-selector .fecha-nombre-input:focus {
+    outline: none;
+    background: #333;
+    border-radius: 6px;
+}
+
+.dropdown-arrow {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.fecha-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    min-width: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 100;
+    margin-top: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.fecha-dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid #333;
+}
+
+.fecha-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.fecha-dropdown-item:hover {
+    background: #333;
+}
+
+.fecha-dropdown-item.active {
+    background: #d4af37;
+    color: #000;
+}
+
+.fecha-dropdown-item.active .partidos-badge {
+    background: #000;
+    color: #d4af37;
+}
+
+.partidos-badge {
+    background: #444;
+    color: #888;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.remove-fecha-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+.remove-fecha-btn:hover {
+    opacity: 1;
+}
+
+/* Fecha Content */
+.fecha-content {
+    padding: 20px;
 }
 
 .fecha-card {
