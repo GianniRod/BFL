@@ -278,3 +278,294 @@
     padding: 40px;
     color: #888;
 }
+
+/* Fechas Section */
+.fechas-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid #333;
+}
+
+.fechas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.fechas-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.add-fecha-btn {
+    background: #d4af37;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.add-fecha-btn:hover {
+    background: #e5c44a;
+}
+
+.no-fechas {
+    text-align: center;
+    color: #888;
+    padding: 30px;
+}
+
+.fechas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.fecha-card {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.fecha-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.fecha-header-row:hover {
+    background: #222;
+}
+
+.fecha-nombre {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #d4af37;
+}
+
+.fecha-nombre-input {
+    font-weight: bold;
+    font-size: 1.1rem;
+    background: #222;
+    border: 1px solid #444;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #d4af37;
+    width: 200px;
+}
+
+.fecha-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.partidos-count {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.expand-icon {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.remove-fecha-btn {
+    background: #b71c1c;
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+}
+
+.remove-fecha-btn:hover {
+    background: #c62828;
+}
+
+.fecha-partidos {
+    border-top: 1px solid #333;
+    padding: 15px 20px;
+    background: #0d0d0d;
+}
+
+.no-partidos {
+    text-align: center;
+    color: #666;
+    padding: 15px;
+    margin: 0;
+}
+
+.partido-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.partido-team {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.partido-team.local {
+    justify-content: flex-start;
+}
+
+.partido-team.visitante {
+    justify-content: flex-end;
+}
+
+.partido-team span {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.partido-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.partido-score {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.score-input {
+    width: 45px;
+    padding: 8px;
+    text-align: center;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.score-separator {
+    color: #888;
+    font-weight: bold;
+}
+
+.score-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #d4af37;
+    min-width: 60px;
+    text-align: center;
+}
+
+.remove-partido-btn {
+    background: #b71c1c;
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.remove-partido-btn:hover {
+    background: #c62828;
+}
+
+.add-partido-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #333;
+    flex-wrap: wrap;
+}
+
+.add-partido-form select {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.vs-text {
+    color: #888;
+    font-weight: bold;
+}
+
+.add-partido-btn {
+    background: #1b5e20;
+    border: 1px solid #4caf50;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.add-partido-btn:hover {
+    background: #2e7d32;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+    .partido-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .partido-team.local,
+    .partido-team.visitante {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .partido-score {
+        order: 1;
+    }
+
+    .add-partido-form {
+        flex-direction: column;
+    }
+
+    .add-partido-form select {
+        width: 100%;
+    }
+}
