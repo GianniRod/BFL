@@ -382,7 +382,7 @@ function Liga() {
                                             setSelectedFechaIndex(Math.max(0, selectedFechaIndex - 1));
                                         }}
                                     >
-                                        🗑️
+                                        ✕
                                     </button>
                                 </div>
 
