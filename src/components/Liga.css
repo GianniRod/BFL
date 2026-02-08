@@ -339,12 +339,11 @@
 
 .carousel-arrow {
     background: transparent;
-    border: 2px solid #d4af37;
+    border: none;
     color: #d4af37;
     width: 40px;
     height: 40px;
-    border-radius: 50%;
-    font-size: 1.8rem;
+    font-size: 2.5rem;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -354,8 +353,8 @@
 }
 
 .carousel-arrow:hover:not(:disabled) {
-    background: #d4af37;
-    color: #000;
+    color: #e5c44a;
+    transform: scale(1.2);
 }
 
 .carousel-arrow:disabled {
@@ -452,12 +451,14 @@
     font-size: 1.2rem;
     cursor: pointer;
     padding: 5px 10px;
-    opacity: 0.6;
-    transition: opacity 0.3s;
+    color: #f44336;
+    opacity: 0.7;
+    transition: all 0.3s;
 }
 
 .remove-fecha-btn:hover {
     opacity: 1;
+    transform: scale(1.2);
 }
 
 /* Fecha Content */
