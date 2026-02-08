@@ -13,6 +13,8 @@ function Liga() {
     const [loading, setLoading] = useState(true);
     const [showConfig, setShowConfig] = useState(false);
     const [allTeams, setAllTeams] = useState([]);
+    const [fechas, setFechas] = useState([]);
+    const [expandedFecha, setExpandedFecha] = useState(null);
 
     // Subscribe to all teams
     useEffect(() => {
@@ -31,9 +33,11 @@ function Liga() {
                 const data = docSnap.data();
                 setLeagueTeams(data.teamIds || []);
                 setStandings(data.standings || []);
+                setFechas(data.fechas || []);
             } else {
                 setLeagueTeams([]);
                 setStandings([]);
+                setFechas([]);
             }
         });
         return () => unsubscribe();
@@ -81,6 +85,68 @@ function Liga() {
 
     const clearResults = async (teamId) => {
         await updateStanding(teamId, 'lastResults', []);
+    };
+
+    // Fechas (match days) management
+    const addFecha = async () => {
+        const newFecha = {
+            id: Date.now(),
+            nombre: `Fecha ${fechas.length + 1}`,
+            partidos: []
+        };
+        const newFechas = [...fechas, newFecha];
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
+    };
+
+    const removeFecha = async (fechaId) => {
+        const newFechas = fechas.filter(f => f.id !== fechaId);
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
+    };
+
+    const updateFechaNombre = async (fechaId, nombre) => {
+        const newFechas = fechas.map(f =>
+            f.id === fechaId ? { ...f, nombre } : f
+        );
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
+    };
+
+    const addPartido = async (fechaId, localId, visitanteId) => {
+        const newPartido = {
+            id: Date.now(),
+            localId,
+            visitanteId,
+            localScore: null,
+            visitanteScore: null
+        };
+        const newFechas = fechas.map(f =>
+            f.id === fechaId ? { ...f, partidos: [...f.partidos, newPartido] } : f
+        );
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
+    };
+
+    const removePartido = async (fechaId, partidoId) => {
+        const newFechas = fechas.map(f =>
+            f.id === fechaId ? { ...f, partidos: f.partidos.filter(p => p.id !== partidoId) } : f
+        );
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
+    };
+
+    const updatePartidoScore = async (fechaId, partidoId, field, value) => {
+        const newFechas = fechas.map(f =>
+            f.id === fechaId ? {
+                ...f,
+                partidos: f.partidos.map(p =>
+                    p.id === partidoId ? { ...p, [field]: value === '' ? null : parseInt(value) } : p
+                )
+            } : f
+        );
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
 
     const getTeamById = (teamId) => allTeams.find(t => t.id === teamId);
@@ -241,6 +307,149 @@ function Liga() {
                             </div>
                         </div>
                     )}
+
+                    {/* Fechas Section */}
+                    <div className="fechas-section">
+                        <div className="fechas-header">
+                            <h3>Calendario de Partidos</h3>
+                            {showConfig && (
+                                <button className="add-fecha-btn" onClick={addFecha}>+ Agregar Fecha</button>
+                            )}
+                        </div>
+
+                        {fechas.length === 0 ? (
+                            <p className="no-fechas">No hay fechas configuradas. {showConfig && 'Haz clic en "+ Agregar Fecha" para comenzar.'}</p>
+                        ) : (
+                            <div className="fechas-list">
+                                {fechas.map((fecha) => (
+                                    <div key={fecha.id} className="fecha-card">
+                                        <div
+                                            className="fecha-header-row"
+                                            onClick={() => setExpandedFecha(expandedFecha === fecha.id ? null : fecha.id)}
+                                        >
+                                            {showConfig ? (
+                                                <input
+                                                    type="text"
+                                                    className="fecha-nombre-input"
+                                                    value={fecha.nombre}
+                                                    onChange={(e) => updateFechaNombre(fecha.id, e.target.value)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            ) : (
+                                                <span className="fecha-nombre">{fecha.nombre}</span>
+                                            )}
+                                            <div className="fecha-actions">
+                                                <span className="partidos-count">{fecha.partidos.length} partidos</span>
+                                                <span className="expand-icon">{expandedFecha === fecha.id ? '▼' : '▶'}</span>
+                                                {showConfig && (
+                                                    <button
+                                                        className="remove-fecha-btn"
+                                                        onClick={(e) => { e.stopPropagation(); removeFecha(fecha.id); }}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {expandedFecha === fecha.id && (
+                                            <div className="fecha-partidos">
+                                                {fecha.partidos.length === 0 ? (
+                                                    <p className="no-partidos">No hay partidos en esta fecha</p>
+                                                ) : (
+                                                    fecha.partidos.map((partido) => {
+                                                        const local = getTeamById(partido.localId);
+                                                        const visitante = getTeamById(partido.visitanteId);
+                                                        return (
+                                                            <div key={partido.id} className="partido-row">
+                                                                <div className="partido-team local">
+                                                                    {local?.['URL PHOTO'] && (
+                                                                        <img src={local['URL PHOTO']} alt="" className="partido-logo" />
+                                                                    )}
+                                                                    <span>{local?.['Team Name'] || 'Equipo'}</span>
+                                                                </div>
+                                                                <div className="partido-score">
+                                                                    {showConfig ? (
+                                                                        <>
+                                                                            <input
+                                                                                type="number"
+                                                                                min="0"
+                                                                                className="score-input"
+                                                                                value={partido.localScore ?? ''}
+                                                                                onChange={(e) => updatePartidoScore(fecha.id, partido.id, 'localScore', e.target.value)}
+                                                                            />
+                                                                            <span className="score-separator">-</span>
+                                                                            <input
+                                                                                type="number"
+                                                                                min="0"
+                                                                                className="score-input"
+                                                                                value={partido.visitanteScore ?? ''}
+                                                                                onChange={(e) => updatePartidoScore(fecha.id, partido.id, 'visitanteScore', e.target.value)}
+                                                                            />
+                                                                        </>
+                                                                    ) : (
+                                                                        <span className="score-display">
+                                                                            {partido.localScore ?? '-'} - {partido.visitanteScore ?? '-'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="partido-team visitante">
+                                                                    <span>{visitante?.['Team Name'] || 'Equipo'}</span>
+                                                                    {visitante?.['URL PHOTO'] && (
+                                                                        <img src={visitante['URL PHOTO']} alt="" className="partido-logo" />
+                                                                    )}
+                                                                </div>
+                                                                {showConfig && (
+                                                                    <button
+                                                                        className="remove-partido-btn"
+                                                                        onClick={() => removePartido(fecha.id, partido.id)}
+                                                                    >
+                                                                        ✕
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
+
+                                                {showConfig && (
+                                                    <div className="add-partido-form">
+                                                        <select id={`local-${fecha.id}`} defaultValue="">
+                                                            <option value="" disabled>Local</option>
+                                                            {leagueTeamsData.map(team => (
+                                                                <option key={team.id} value={team.id}>{team['Team Name']}</option>
+                                                            ))}
+                                                        </select>
+                                                        <span className="vs-text">vs</span>
+                                                        <select id={`visitante-${fecha.id}`} defaultValue="">
+                                                            <option value="" disabled>Visitante</option>
+                                                            {leagueTeamsData.map(team => (
+                                                                <option key={team.id} value={team.id}>{team['Team Name']}</option>
+                                                            ))}
+                                                        </select>
+                                                        <button
+                                                            className="add-partido-btn"
+                                                            onClick={() => {
+                                                                const localSelect = document.getElementById(`local-${fecha.id}`);
+                                                                const visitanteSelect = document.getElementById(`visitante-${fecha.id}`);
+                                                                if (localSelect.value && visitanteSelect.value) {
+                                                                    addPartido(fecha.id, localSelect.value, visitanteSelect.value);
+                                                                    localSelect.value = '';
+                                                                    visitanteSelect.value = '';
+                                                                }
+                                                            }}
+                                                        >
+                                                            + Agregar Partido
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
