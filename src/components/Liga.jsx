@@ -312,13 +312,11 @@ function Liga() {
                     <div className="fechas-section">
                         <div className="fechas-header">
                             <h3>Calendario de Partidos</h3>
-                            {showConfig && (
-                                <button className="add-fecha-btn" onClick={addFecha}>+ Agregar Fecha</button>
-                            )}
+                            <button className="add-fecha-btn" onClick={addFecha}>+ Agregar Fecha</button>
                         </div>
 
                         {fechas.length === 0 ? (
-                            <p className="no-fechas">No hay fechas configuradas. {showConfig && 'Haz clic en "+ Agregar Fecha" para comenzar.'}</p>
+                            <p className="no-fechas">No hay fechas configuradas. Haz clic en "+ Agregar Fecha" para comenzar.</p>
                         ) : (
                             <div className="fechas-list">
                                 {fechas.map((fecha) => (
@@ -327,28 +325,22 @@ function Liga() {
                                             className="fecha-header-row"
                                             onClick={() => setExpandedFecha(expandedFecha === fecha.id ? null : fecha.id)}
                                         >
-                                            {showConfig ? (
-                                                <input
-                                                    type="text"
-                                                    className="fecha-nombre-input"
-                                                    value={fecha.nombre}
-                                                    onChange={(e) => updateFechaNombre(fecha.id, e.target.value)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            ) : (
-                                                <span className="fecha-nombre">{fecha.nombre}</span>
-                                            )}
+                                            <input
+                                                type="text"
+                                                className="fecha-nombre-input"
+                                                value={fecha.nombre}
+                                                onChange={(e) => updateFechaNombre(fecha.id, e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
                                             <div className="fecha-actions">
                                                 <span className="partidos-count">{fecha.partidos.length} partidos</span>
                                                 <span className="expand-icon">{expandedFecha === fecha.id ? '▼' : '▶'}</span>
-                                                {showConfig && (
-                                                    <button
-                                                        className="remove-fecha-btn"
-                                                        onClick={(e) => { e.stopPropagation(); removeFecha(fecha.id); }}
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                )}
+                                                <button
+                                                    className="remove-fecha-btn"
+                                                    onClick={(e) => { e.stopPropagation(); removeFecha(fecha.id); }}
+                                                >
+                                                    ✕
+                                                </button>
                                             </div>
                                         </div>
 
@@ -369,29 +361,21 @@ function Liga() {
                                                                     <span>{local?.['Team Name'] || 'Equipo'}</span>
                                                                 </div>
                                                                 <div className="partido-score">
-                                                                    {showConfig ? (
-                                                                        <>
-                                                                            <input
-                                                                                type="number"
-                                                                                min="0"
-                                                                                className="score-input"
-                                                                                value={partido.localScore ?? ''}
-                                                                                onChange={(e) => updatePartidoScore(fecha.id, partido.id, 'localScore', e.target.value)}
-                                                                            />
-                                                                            <span className="score-separator">-</span>
-                                                                            <input
-                                                                                type="number"
-                                                                                min="0"
-                                                                                className="score-input"
-                                                                                value={partido.visitanteScore ?? ''}
-                                                                                onChange={(e) => updatePartidoScore(fecha.id, partido.id, 'visitanteScore', e.target.value)}
-                                                                            />
-                                                                        </>
-                                                                    ) : (
-                                                                        <span className="score-display">
-                                                                            {partido.localScore ?? '-'} - {partido.visitanteScore ?? '-'}
-                                                                        </span>
-                                                                    )}
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        className="score-input"
+                                                                        value={partido.localScore ?? ''}
+                                                                        onChange={(e) => updatePartidoScore(fecha.id, partido.id, 'localScore', e.target.value)}
+                                                                    />
+                                                                    <span className="score-separator">-</span>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        className="score-input"
+                                                                        value={partido.visitanteScore ?? ''}
+                                                                        onChange={(e) => updatePartidoScore(fecha.id, partido.id, 'visitanteScore', e.target.value)}
+                                                                    />
                                                                 </div>
                                                                 <div className="partido-team visitante">
                                                                     <span>{visitante?.['Team Name'] || 'Equipo'}</span>
@@ -399,50 +383,46 @@ function Liga() {
                                                                         <img src={visitante['URL PHOTO']} alt="" className="partido-logo" />
                                                                     )}
                                                                 </div>
-                                                                {showConfig && (
-                                                                    <button
-                                                                        className="remove-partido-btn"
-                                                                        onClick={() => removePartido(fecha.id, partido.id)}
-                                                                    >
-                                                                        ✕
-                                                                    </button>
-                                                                )}
+                                                                <button
+                                                                    className="remove-partido-btn"
+                                                                    onClick={() => removePartido(fecha.id, partido.id)}
+                                                                >
+                                                                    ✕
+                                                                </button>
                                                             </div>
                                                         );
                                                     })
                                                 )}
 
-                                                {showConfig && (
-                                                    <div className="add-partido-form">
-                                                        <select id={`local-${fecha.id}`} defaultValue="">
-                                                            <option value="" disabled>Local</option>
-                                                            {leagueTeamsData.map(team => (
-                                                                <option key={team.id} value={team.id}>{team['Team Name']}</option>
-                                                            ))}
-                                                        </select>
-                                                        <span className="vs-text">vs</span>
-                                                        <select id={`visitante-${fecha.id}`} defaultValue="">
-                                                            <option value="" disabled>Visitante</option>
-                                                            {leagueTeamsData.map(team => (
-                                                                <option key={team.id} value={team.id}>{team['Team Name']}</option>
-                                                            ))}
-                                                        </select>
-                                                        <button
-                                                            className="add-partido-btn"
-                                                            onClick={() => {
-                                                                const localSelect = document.getElementById(`local-${fecha.id}`);
-                                                                const visitanteSelect = document.getElementById(`visitante-${fecha.id}`);
-                                                                if (localSelect.value && visitanteSelect.value) {
-                                                                    addPartido(fecha.id, localSelect.value, visitanteSelect.value);
-                                                                    localSelect.value = '';
-                                                                    visitanteSelect.value = '';
-                                                                }
-                                                            }}
-                                                        >
-                                                            + Agregar Partido
-                                                        </button>
-                                                    </div>
-                                                )}
+                                                <div className="add-partido-form">
+                                                    <select id={`local-${fecha.id}`} defaultValue="">
+                                                        <option value="" disabled>Local</option>
+                                                        {leagueTeamsData.map(team => (
+                                                            <option key={team.id} value={team.id}>{team['Team Name']}</option>
+                                                        ))}
+                                                    </select>
+                                                    <span className="vs-text">vs</span>
+                                                    <select id={`visitante-${fecha.id}`} defaultValue="">
+                                                        <option value="" disabled>Visitante</option>
+                                                        {leagueTeamsData.map(team => (
+                                                            <option key={team.id} value={team.id}>{team['Team Name']}</option>
+                                                        ))}
+                                                    </select>
+                                                    <button
+                                                        className="add-partido-btn"
+                                                        onClick={() => {
+                                                            const localSelect = document.getElementById(`local-${fecha.id}`);
+                                                            const visitanteSelect = document.getElementById(`visitante-${fecha.id}`);
+                                                            if (localSelect.value && visitanteSelect.value) {
+                                                                addPartido(fecha.id, localSelect.value, visitanteSelect.value);
+                                                                localSelect.value = '';
+                                                                visitanteSelect.value = '';
+                                                            }
+                                                        }}
+                                                    >
+                                                        + Agregar Partido
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
