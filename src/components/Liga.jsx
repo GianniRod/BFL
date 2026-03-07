@@ -6,6 +6,15 @@ import './Liga.css';
 
 const YEARS = [2024, 2025, 2026];
 
+const TIME_SLOTS = [
+    { day: 'friday', hour: 13, minute: 0, label: 'VIE 13:00' },
+    { day: 'friday', hour: 16, minute: 0, label: 'VIE 16:00' },
+    { day: 'friday', hour: 19, minute: 0, label: 'VIE 19:00' },
+    { day: 'saturday', hour: 11, minute: 0, label: 'SÁB 11:00' },
+    { day: 'saturday', hour: 14, minute: 0, label: 'SÁB 14:00' },
+    { day: 'saturday', hour: 17, minute: 0, label: 'SÁB 17:00' },
+];
+
 function Liga() {
     const [selectedYear, setSelectedYear] = useState(2026);
     const [leagueTeams, setLeagueTeams] = useState([]);
@@ -16,6 +25,9 @@ function Liga() {
     const [fechas, setFechas] = useState([]);
     const [selectedFechaIndex, setSelectedFechaIndex] = useState(null);
     const [showFechaDropdown, setShowFechaDropdown] = useState(false);
+    const [positionLabels, setPositionLabels] = useState([]);
+    const [showCalendarModal, setShowCalendarModal] = useState(false);
+    const [calendarStartDate, setCalendarStartDate] = useState('');
 
     // Subscribe to all teams
     useEffect(() => {
@@ -35,10 +47,12 @@ function Liga() {
                 setLeagueTeams(data.teamIds || []);
                 setStandings(data.standings || []);
                 setFechas(data.fechas || []);
+                setPositionLabels(data.positionLabels || []);
             } else {
                 setLeagueTeams([]);
                 setStandings([]);
                 setFechas([]);
+                setPositionLabels([]);
             }
         });
         return () => unsubscribe();
@@ -50,6 +64,8 @@ function Liga() {
             setSelectedFechaIndex(fechas.length - 1);
         }
     }, [fechas, selectedFechaIndex]);
+
+    // ── Team Management ──
 
     const toggleTeamInLeague = async (teamId) => {
         const newTeamIds = leagueTeams.includes(teamId)
@@ -63,6 +79,8 @@ function Liga() {
         }, { merge: true });
     };
 
+    // ── Standings Management ──
+
     const updateStanding = async (teamId, field, value) => {
         const existingStanding = standings.find(s => s.teamId === teamId);
         const updatedStanding = {
@@ -72,7 +90,6 @@ function Liga() {
             [field]: field === 'lastResults' ? value : (parseInt(value) || 0)
         };
 
-        // Calculate derived values
         const totalGames = updatedStanding.v + updatedStanding.p;
         updatedStanding.pct = totalGames > 0 ? (updatedStanding.v / totalGames).toFixed(3) : '0.000';
         updatedStanding.np = updatedStanding.pf - updatedStanding.pc;
@@ -87,7 +104,7 @@ function Liga() {
     const addResult = async (teamId, result) => {
         const existingStanding = standings.find(s => s.teamId === teamId) || { lastResults: [] };
         const currentResults = existingStanding.lastResults || [];
-        const newResults = [...currentResults, result].slice(-5); // Keep last 5
+        const newResults = [...currentResults, result].slice(-5);
         await updateStanding(teamId, 'lastResults', newResults);
     };
 
@@ -95,7 +112,8 @@ function Liga() {
         await updateStanding(teamId, 'lastResults', []);
     };
 
-    // Fechas (match days) management
+    // ── Fechas (match days) Management ──
+
     const addFecha = async () => {
         const newFecha = {
             id: Date.now(),
@@ -157,9 +175,226 @@ function Liga() {
         await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
 
+    const updatePartidoDateTime = async (fechaId, partidoId, dateTime) => {
+        const newFechas = fechas.map(f =>
+            f.id === fechaId ? {
+                ...f,
+                partidos: f.partidos.map(p =>
+                    p.id === partidoId ? { ...p, dateTime } : p
+                )
+            } : f
+        );
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
+    };
+
+    // ── Position Labels Management ──
+
+    const savePositionLabels = async (newLabels) => {
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { positionLabels: newLabels }, { merge: true });
+    };
+
+    const addPositionLabel = () => {
+        const newLabels = [...positionLabels, { name: '', color: '#4caf50', fromPos: 1, toPos: 1 }];
+        savePositionLabels(newLabels);
+    };
+
+    const removePositionLabel = (index) => {
+        const newLabels = positionLabels.filter((_, i) => i !== index);
+        savePositionLabels(newLabels);
+    };
+
+    const updatePositionLabel = (index, field, value) => {
+        const newLabels = positionLabels.map((label, i) =>
+            i === index ? { ...label, [field]: (field === 'fromPos' || field === 'toPos') ? (parseInt(value) || 1) : value } : label
+        );
+        savePositionLabels(newLabels);
+    };
+
+    // ── Automatic Calendar Generation ──
+
+    const generateCalendar = async () => {
+        if (!calendarStartDate) return;
+
+        const teams = [...leagueTeams];
+        const n = teams.length;
+
+        if (n < 2 || n % 2 !== 0) {
+            alert('Se necesita un número par de equipos (mínimo 2).');
+            return;
+        }
+
+        // Shuffle teams for random assignment
+        for (let i = teams.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [teams[i], teams[j]] = [teams[j], teams[i]];
+        }
+
+        // Generate round-robin using circle method
+        const rounds = [];
+        const teamsCopy = [...teams];
+
+        for (let round = 0; round < n - 1; round++) {
+            const matches = [];
+            for (let i = 0; i < n / 2; i++) {
+                matches.push({
+                    localId: teamsCopy[i],
+                    visitanteId: teamsCopy[n - 1 - i]
+                });
+            }
+            rounds.push(matches);
+
+            // Rotate: keep first team fixed, rotate the rest clockwise
+            const last = teamsCopy.pop();
+            teamsCopy.splice(1, 0, last);
+        }
+
+        // Generate vuelta (swap home/away, same round order)
+        const vueltaRounds = rounds.map(round =>
+            round.map(match => ({
+                localId: match.visitanteId,
+                visitanteId: match.localId
+            }))
+        );
+
+        const allRounds = [...rounds, ...vueltaRounds];
+        const matchesPerRound = n / 2;
+
+        // Track how many times each team plays in each time slot for balanced distribution
+        const teamSlotCount = {};
+        teams.forEach(id => {
+            teamSlotCount[id] = new Array(TIME_SLOTS.length).fill(0);
+        });
+
+        const startDate = new Date(calendarStartDate + 'T12:00:00');
+
+        const baseTime = Date.now();
+
+        const newFechas = allRounds.map((round, fechaIndex) => {
+            // Calculate week offset (rest week between fecha 11 and 12)
+            let weekOffset;
+            if (fechaIndex < n - 1) {
+                weekOffset = fechaIndex;
+            } else {
+                weekOffset = fechaIndex + 1; // Skip rest week after ida
+            }
+
+            const fridayDate = new Date(startDate);
+            fridayDate.setDate(fridayDate.getDate() + (weekOffset * 7));
+
+            const saturdayDate = new Date(fridayDate);
+            saturdayDate.setDate(saturdayDate.getDate() + 1);
+
+            // Assign matches to time slots using greedy algorithm for balance
+            const matchIndices = round.map((_, i) => i);
+            const usedSlots = new Set();
+            const slotAssignments = new Array(matchesPerRound).fill(-1);
+
+            // Sort matches by how constrained their teams are (most constrained first)
+            matchIndices.sort((a, b) => {
+                const matchA = round[a];
+                const matchB = round[b];
+                const maxA = Math.max(...teamSlotCount[matchA.localId]) + Math.max(...teamSlotCount[matchA.visitanteId]);
+                const maxB = Math.max(...teamSlotCount[matchB.localId]) + Math.max(...teamSlotCount[matchB.visitanteId]);
+                return maxB - maxA;
+            });
+
+            for (const mi of matchIndices) {
+                const match = round[mi];
+                let bestSlot = -1;
+                let bestScore = Infinity;
+
+                for (let s = 0; s < TIME_SLOTS.length; s++) {
+                    if (usedSlots.has(s)) continue;
+                    if (s >= matchesPerRound) continue; // Only use as many slots as matches
+                    const score = teamSlotCount[match.localId][s] + teamSlotCount[match.visitanteId][s];
+                    if (score < bestScore) {
+                        bestScore = score;
+                        bestSlot = s;
+                    }
+                }
+
+                // Fallback: if no available slot within matchesPerRound, use any available
+                if (bestSlot === -1) {
+                    for (let s = 0; s < TIME_SLOTS.length; s++) {
+                        if (!usedSlots.has(s)) { bestSlot = s; break; }
+                    }
+                }
+
+                usedSlots.add(bestSlot);
+                slotAssignments[mi] = bestSlot;
+                teamSlotCount[match.localId][bestSlot]++;
+                teamSlotCount[match.visitanteId][bestSlot]++;
+            }
+
+            // Build partidos with dateTime
+            const partidos = round.map((match, i) => {
+                const slotIdx = slotAssignments[i];
+                const slot = TIME_SLOTS[slotIdx];
+                const matchDate = slot.day === 'friday' ? new Date(fridayDate) : new Date(saturdayDate);
+                matchDate.setHours(slot.hour, slot.minute, 0, 0);
+
+                const yyyy = matchDate.getFullYear();
+                const mm = String(matchDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(matchDate.getDate()).padStart(2, '0');
+                const hh = String(matchDate.getHours()).padStart(2, '0');
+                const min = String(matchDate.getMinutes()).padStart(2, '0');
+                const dateTime = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+
+                return {
+                    id: baseTime + fechaIndex * 10000 + 1000 + i,
+                    localId: match.localId,
+                    visitanteId: match.visitanteId,
+                    localScore: null,
+                    visitanteScore: null,
+                    dateTime
+                };
+            });
+
+            // Sort partidos by dateTime
+            partidos.sort((a, b) => a.dateTime.localeCompare(b.dateTime));
+
+            return {
+                id: baseTime + fechaIndex * 10000,
+                nombre: `Fecha ${fechaIndex + 1}`,
+                partidos
+            };
+        });
+
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
+        setSelectedFechaIndex(0);
+        setShowCalendarModal(false);
+        setCalendarStartDate('');
+    };
+
+    // ── Helpers ──
+
     const getTeamById = (teamId) => allTeams.find(t => t.id === teamId);
 
-    // Get sorted standings for display (by PCT descending, then by NP)
+    const getPositionColor = (position) => {
+        for (const label of positionLabels) {
+            if (position >= label.fromPos && position <= label.toPos) {
+                return label.color;
+            }
+        }
+        return null;
+    };
+
+    const formatDateTime = (dateTimeStr) => {
+        if (!dateTimeStr) return '';
+        const date = new Date(dateTimeStr);
+        if (isNaN(date.getTime())) return dateTimeStr;
+        const days = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+        const day = days[date.getDay()];
+        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const hh = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        return `${day} ${dd}/${mm} - ${hh}:${min}`;
+    };
+
     const sortedStandings = [...standings]
         .sort((a, b) => {
             const pctA = parseFloat(a.pct) || 0;
@@ -172,7 +407,6 @@ function Liga() {
         .map(id => getTeamById(id))
         .filter(Boolean);
 
-    // Render last results as colored dots
     const renderLastResults = (results = []) => {
         return (
             <div className="last-results">
@@ -193,7 +427,10 @@ function Liga() {
                 <label>Temporada:</label>
                 <select
                     value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    onChange={(e) => {
+                        setSelectedYear(parseInt(e.target.value));
+                        setSelectedFechaIndex(null);
+                    }}
                 >
                     {YEARS.map(year => (
                         <option key={year} value={year}>{year}</option>
@@ -222,6 +459,49 @@ function Liga() {
                             </label>
                         ))}
                     </div>
+
+                    {/* Position Labels Config */}
+                    <div className="labels-config">
+                        <h4>Etiquetas de Posición</h4>
+                        <p className="labels-config-desc">Asigna colores a rangos de posiciones para indicar clasificación</p>
+                        {positionLabels.map((label, i) => (
+                            <div key={i} className="label-config-row">
+                                <input
+                                    type="color"
+                                    value={label.color}
+                                    onChange={(e) => updatePositionLabel(i, 'color', e.target.value)}
+                                    className="label-color-picker"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Nombre (ej: Clasificados)"
+                                    value={label.name}
+                                    onChange={(e) => updatePositionLabel(i, 'name', e.target.value)}
+                                    className="label-name-input"
+                                />
+                                <label className="label-pos-input">
+                                    Desde
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={label.fromPos}
+                                        onChange={(e) => updatePositionLabel(i, 'fromPos', e.target.value)}
+                                    />
+                                </label>
+                                <label className="label-pos-input">
+                                    Hasta
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={label.toPos}
+                                        onChange={(e) => updatePositionLabel(i, 'toPos', e.target.value)}
+                                    />
+                                </label>
+                                <button className="remove-label-btn" onClick={() => removePositionLabel(i)}>✕</button>
+                            </div>
+                        ))}
+                        <button className="add-label-btn" onClick={addPositionLabel}>+ Agregar Etiqueta</button>
+                    </div>
                 </div>
             )}
 
@@ -249,9 +529,21 @@ function Liga() {
                                 sortedStandings.map((standing, index) => {
                                     const team = getTeamById(standing.teamId);
                                     if (!team) return null;
+                                    const labelColor = getPositionColor(index + 1);
                                     return (
-                                        <tr key={standing.teamId} className={index < 4 ? 'playoff' : ''}>
-                                            <td className="position">{index + 1}</td>
+                                        <tr
+                                            key={standing.teamId}
+                                            style={labelColor ? { backgroundColor: labelColor + '15' } : {}}
+                                        >
+                                            <td className="position">
+                                                {labelColor && (
+                                                    <span
+                                                        className="position-label-bar"
+                                                        style={{ backgroundColor: labelColor }}
+                                                    />
+                                                )}
+                                                {index + 1}
+                                            </td>
                                             <td className="team-cell">
                                                 {team['URL PHOTO'] && (
                                                     <img src={team['URL PHOTO']} alt="" className="mini-logo" />
@@ -269,25 +561,53 @@ function Liga() {
                                     );
                                 })
                             ) : (
-                                leagueTeamsData.map((team, index) => (
-                                    <tr key={team.id}>
-                                        <td className="position">{index + 1}</td>
-                                        <td className="team-cell">
-                                            {team['URL PHOTO'] && (
-                                                <img src={team['URL PHOTO']} alt="" className="mini-logo" />
-                                            )}
-                                            {team['Team Name']}
-                                        </td>
-                                        <td className="pct">0.000</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td></td>
-                                    </tr>
-                                ))
+                                leagueTeamsData.map((team, index) => {
+                                    const labelColor = getPositionColor(index + 1);
+                                    return (
+                                        <tr
+                                            key={team.id}
+                                            style={labelColor ? { backgroundColor: labelColor + '15' } : {}}
+                                        >
+                                            <td className="position">
+                                                {labelColor && (
+                                                    <span
+                                                        className="position-label-bar"
+                                                        style={{ backgroundColor: labelColor }}
+                                                    />
+                                                )}
+                                                {index + 1}
+                                            </td>
+                                            <td className="team-cell">
+                                                {team['URL PHOTO'] && (
+                                                    <img src={team['URL PHOTO']} alt="" className="mini-logo" />
+                                                )}
+                                                {team['Team Name']}
+                                            </td>
+                                            <td className="pct">0.000</td>
+                                            <td>0</td>
+                                            <td>0</td>
+                                            <td>0</td>
+                                            <td></td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>
+
+                    {/* Position Labels Legend */}
+                    {positionLabels.length > 0 && (
+                        <div className="labels-legend">
+                            {positionLabels.map((label, i) => (
+                                <div key={i} className="legend-item">
+                                    <span className="legend-color" style={{ backgroundColor: label.color }} />
+                                    <span className="legend-text">
+                                        {label.name || 'Sin nombre'} (Pos. {label.fromPos}{label.toPos > label.fromPos ? `-${label.toPos}` : ''})
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     {showConfig && (
                         <div className="edit-standings">
@@ -320,7 +640,17 @@ function Liga() {
                     <div className="fechas-section">
                         <div className="fechas-header">
                             <h3>Calendario</h3>
-                            <button className="add-fecha-btn" onClick={addFecha}>+ Agregar Fecha</button>
+                            <div className="fechas-header-actions">
+                                {selectedYear === 2026 && leagueTeams.length > 0 && (
+                                    <button
+                                        className="generate-calendar-btn"
+                                        onClick={() => setShowCalendarModal(true)}
+                                    >
+                                        📅 Generar Calendario
+                                    </button>
+                                )}
+                                <button className="add-fecha-btn" onClick={addFecha}>+ Agregar Fecha</button>
+                            </div>
                         </div>
 
                         {fechas.length === 0 ? (
@@ -396,42 +726,59 @@ function Liga() {
                                                 const local = getTeamById(partido.localId);
                                                 const visitante = getTeamById(partido.visitanteId);
                                                 return (
-                                                    <div key={partido.id} className="partido-row">
-                                                        <div className="partido-team local">
-                                                            {local?.['URL PHOTO'] && (
-                                                                <img src={local['URL PHOTO']} alt="" className="partido-logo" />
-                                                            )}
-                                                            <span>{local?.['Team Name'] || 'Equipo'}</span>
+                                                    <div key={partido.id} className="partido-card">
+                                                        <div className="partido-row">
+                                                            <div className="partido-team local">
+                                                                {local?.['URL PHOTO'] && (
+                                                                    <img src={local['URL PHOTO']} alt="" className="partido-logo" />
+                                                                )}
+                                                                <span>{local?.['Team Name'] || 'Equipo'}</span>
+                                                            </div>
+                                                            <div className="partido-center">
+                                                                <div className="partido-score">
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        className="score-input"
+                                                                        value={partido.localScore ?? ''}
+                                                                        onChange={(e) => updatePartidoScore(fechas[selectedFechaIndex].id, partido.id, 'localScore', e.target.value)}
+                                                                    />
+                                                                    <span className="score-separator">-</span>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        className="score-input"
+                                                                        value={partido.visitanteScore ?? ''}
+                                                                        onChange={(e) => updatePartidoScore(fechas[selectedFechaIndex].id, partido.id, 'visitanteScore', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                                {partido.dateTime && !showConfig && (
+                                                                    <div className="partido-datetime">
+                                                                        {formatDateTime(partido.dateTime)}
+                                                                    </div>
+                                                                )}
+                                                                {showConfig && (
+                                                                    <input
+                                                                        type="datetime-local"
+                                                                        className="datetime-edit-input"
+                                                                        value={partido.dateTime || ''}
+                                                                        onChange={(e) => updatePartidoDateTime(fechas[selectedFechaIndex].id, partido.id, e.target.value)}
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                            <div className="partido-team visitante">
+                                                                <span>{visitante?.['Team Name'] || 'Equipo'}</span>
+                                                                {visitante?.['URL PHOTO'] && (
+                                                                    <img src={visitante['URL PHOTO']} alt="" className="partido-logo" />
+                                                                )}
+                                                            </div>
+                                                            <button
+                                                                className="remove-partido-btn"
+                                                                onClick={() => removePartido(fechas[selectedFechaIndex].id, partido.id)}
+                                                            >
+                                                                ✕
+                                                            </button>
                                                         </div>
-                                                        <div className="partido-score">
-                                                            <input
-                                                                type="number"
-                                                                min="0"
-                                                                className="score-input"
-                                                                value={partido.localScore ?? ''}
-                                                                onChange={(e) => updatePartidoScore(fechas[selectedFechaIndex].id, partido.id, 'localScore', e.target.value)}
-                                                            />
-                                                            <span className="score-separator">-</span>
-                                                            <input
-                                                                type="number"
-                                                                min="0"
-                                                                className="score-input"
-                                                                value={partido.visitanteScore ?? ''}
-                                                                onChange={(e) => updatePartidoScore(fechas[selectedFechaIndex].id, partido.id, 'visitanteScore', e.target.value)}
-                                                            />
-                                                        </div>
-                                                        <div className="partido-team visitante">
-                                                            <span>{visitante?.['Team Name'] || 'Equipo'}</span>
-                                                            {visitante?.['URL PHOTO'] && (
-                                                                <img src={visitante['URL PHOTO']} alt="" className="partido-logo" />
-                                                            )}
-                                                        </div>
-                                                        <button
-                                                            className="remove-partido-btn"
-                                                            onClick={() => removePartido(fechas[selectedFechaIndex].id, partido.id)}
-                                                        >
-                                                            ✕
-                                                        </button>
                                                     </div>
                                                 );
                                             })
@@ -470,6 +817,52 @@ function Liga() {
                                 )}
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Calendar Generation Modal */}
+            {showCalendarModal && (
+                <div className="calendar-modal-overlay" onClick={() => setShowCalendarModal(false)}>
+                    <div className="calendar-modal" onClick={(e) => e.stopPropagation()}>
+                        <h3>📅 Generar Calendario Automáticamente</h3>
+                        <p className="modal-subtitle">Todos contra todos, ida y vuelta</p>
+
+                        {fechas.length > 0 && (
+                            <div className="calendar-warning">
+                                ⚠️ Se reemplazarán las {fechas.length} fechas existentes
+                            </div>
+                        )}
+
+                        <div className="modal-info">
+                            <p>• {leagueTeams.length} equipos → {(leagueTeams.length - 1) * 2} fechas</p>
+                            <p>• Viernes: 13:00, 16:00, 19:00</p>
+                            <p>• Sábados: 11:00, 14:00, 17:00</p>
+                            <p>• Semana de descanso entre ida y vuelta</p>
+                        </div>
+
+                        <label className="modal-date-label">
+                            ¿A partir de qué viernes comienza el torneo?
+                            <input
+                                type="date"
+                                value={calendarStartDate}
+                                onChange={(e) => setCalendarStartDate(e.target.value)}
+                                className="modal-date-input"
+                            />
+                        </label>
+
+                        <div className="modal-buttons">
+                            <button className="modal-cancel-btn" onClick={() => setShowCalendarModal(false)}>
+                                Cancelar
+                            </button>
+                            <button
+                                className="modal-generate-btn"
+                                onClick={generateCalendar}
+                                disabled={!calendarStartDate}
+                            >
+                                Generar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
