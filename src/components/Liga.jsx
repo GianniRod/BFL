@@ -188,6 +188,19 @@ function Liga() {
         await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
 
+    const movePartido = async (fechaId, partidoIndex, direction) => {
+        const newFechas = fechas.map(f => {
+            if (f.id !== fechaId) return f;
+            const newPartidos = [...f.partidos];
+            const newIndex = partidoIndex + direction;
+            if (newIndex < 0 || newIndex >= newPartidos.length) return f;
+            [newPartidos[partidoIndex], newPartidos[newIndex]] = [newPartidos[newIndex], newPartidos[partidoIndex]];
+            return { ...f, partidos: newPartidos };
+        });
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
+    };
+
     // ── Position Labels Management ──
 
     const savePositionLabels = async (newLabels) => {
@@ -722,12 +735,31 @@ function Liga() {
                                         {fechas[selectedFechaIndex].partidos.length === 0 ? (
                                             <p className="no-partidos">No hay partidos en esta fecha</p>
                                         ) : (
-                                            fechas[selectedFechaIndex].partidos.map((partido) => {
+                                            fechas[selectedFechaIndex].partidos.map((partido, partidoIdx) => {
                                                 const local = getTeamById(partido.localId);
                                                 const visitante = getTeamById(partido.visitanteId);
+                                                const totalPartidos = fechas[selectedFechaIndex].partidos.length;
                                                 return (
                                                     <div key={partido.id} className="partido-card">
                                                         <div className="partido-row">
+                                                            {showConfig && (
+                                                                <div className="partido-reorder">
+                                                                    <button
+                                                                        className="reorder-btn"
+                                                                        disabled={partidoIdx === 0}
+                                                                        onClick={() => movePartido(fechas[selectedFechaIndex].id, partidoIdx, -1)}
+                                                                    >
+                                                                        ▲
+                                                                    </button>
+                                                                    <button
+                                                                        className="reorder-btn"
+                                                                        disabled={partidoIdx === totalPartidos - 1}
+                                                                        onClick={() => movePartido(fechas[selectedFechaIndex].id, partidoIdx, 1)}
+                                                                    >
+                                                                        ▼
+                                                                    </button>
+                                                                </div>
+                                                            )}
                                                             <div className="partido-team local">
                                                                 {local?.['URL PHOTO'] && (
                                                                     <img src={local['URL PHOTO']} alt="" className="partido-logo" />
