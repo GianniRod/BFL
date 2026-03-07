@@ -132,6 +132,7 @@
 .standings-table .position {
     font-weight: bold;
     color: #d4af37;
+    position: relative;
 }
 
 .standings-table .team-cell {
@@ -291,6 +292,13 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+}
+
+.fechas-header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .fechas-header h3 {
@@ -685,6 +693,335 @@
     background: #2e7d32;
 }
 
+/* Position Label Bar */
+.position-label-bar {
+    position: absolute;
+    left: 0;
+    top: 2px;
+    bottom: 2px;
+    width: 4px;
+    border-radius: 2px;
+}
+
+/* Labels Legend */
+.labels-legend {
+    display: flex;
+    gap: 20px;
+    padding: 12px 16px;
+    background: #1a1a1a;
+    border-radius: 0 0 12px 12px;
+    border: 1px solid #333;
+    border-top: none;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.legend-text {
+    font-size: 0.85rem;
+    color: #bbb;
+}
+
+/* Labels Config */
+.labels-config {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #333;
+}
+
+.labels-config h4 {
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.labels-config-desc {
+    text-align: center;
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+}
+
+.label-config-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #222;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.label-color-picker {
+    width: 40px;
+    height: 36px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+    padding: 0;
+}
+
+.label-color-picker::-webkit-color-swatch-wrapper {
+    padding: 2px;
+}
+
+.label-color-picker::-webkit-color-swatch {
+    border: 1px solid #555;
+    border-radius: 4px;
+}
+
+.label-name-input {
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 12px;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.label-pos-input {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.label-pos-input input {
+    width: 50px;
+    padding: 6px;
+    text-align: center;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.remove-label-btn {
+    background: transparent;
+    border: none;
+    color: #f44336;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    opacity: 0.7;
+    transition: all 0.3s;
+}
+
+.remove-label-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.add-label-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #aaa;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    transition: all 0.3s;
+}
+
+.add-label-btn:hover {
+    background: #444;
+    color: white;
+}
+
+/* Generate Calendar Button */
+.generate-calendar-btn {
+    background: linear-gradient(135deg, #1565c0, #1e88e5);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.generate-calendar-btn:hover {
+    background: linear-gradient(135deg, #1e88e5, #42a5f5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 136, 229, 0.3);
+}
+
+/* Calendar Modal */
+.calendar-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.calendar-modal {
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 460px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.calendar-modal h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.4rem;
+    text-align: center;
+}
+
+.modal-subtitle {
+    text-align: center;
+    color: #888;
+    margin: 0 0 20px 0;
+    font-size: 0.9rem;
+}
+
+.calendar-warning {
+    background: rgba(255, 152, 0, 0.15);
+    border: 1px solid rgba(255, 152, 0, 0.4);
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    color: #ffb74d;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.modal-info {
+    background: #222;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
+
+.modal-info p {
+    margin: 4px 0;
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.modal-date-label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: #ccc;
+    margin-bottom: 25px;
+}
+
+.modal-date-input {
+    padding: 12px;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.modal-cancel-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #aaa;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.modal-cancel-btn:hover {
+    background: #444;
+    color: white;
+}
+
+.modal-generate-btn {
+    background: linear-gradient(135deg, #1565c0, #1e88e5);
+    border: none;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.modal-generate-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1e88e5, #42a5f5);
+}
+
+.modal-generate-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Partido Center (score + datetime) */
+.partido-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.partido-card {
+    margin-bottom: 10px;
+}
+
+.partido-datetime {
+    font-size: 0.78rem;
+    color: #888;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.datetime-edit-input {
+    padding: 5px 8px;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.8rem;
+    width: 100%;
+    max-width: 200px;
+    margin-top: 2px;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 600px) {
     .partido-row {
@@ -708,5 +1045,28 @@
 
     .add-partido-form select {
         width: 100%;
+    }
+
+    .fechas-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .fechas-header-actions {
+        justify-content: center;
+    }
+
+    .label-config-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .label-pos-input {
+        justify-content: center;
+    }
+
+    .labels-legend {
+        justify-content: center;
     }
 }
