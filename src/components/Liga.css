@@ -453,21 +453,7 @@
     font-size: 0.8rem;
 }
 
-.remove-fecha-btn {
-    background: transparent;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 5px 10px;
-    color: #f44336;
-    opacity: 0.7;
-    transition: all 0.3s;
-}
 
-.remove-fecha-btn:hover {
-    opacity: 1;
-    transform: scale(1.2);
-}
 
 /* Fecha Content */
 .fecha-content {
@@ -533,13 +519,17 @@
     color: white;
     width: 28px;
     height: 28px;
+    min-width: 28px;
+    min-height: 28px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background 0.3s;
+    padding: 0;
 }
 
 .remove-fecha-btn:hover {
@@ -639,13 +629,17 @@
     color: white;
     width: 24px;
     height: 24px;
+    min-width: 24px;
+    min-height: 24px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    padding: 0;
 }
 
 .remove-partido-btn:hover {
@@ -1001,6 +995,44 @@
 
 .partido-card {
     margin-bottom: 10px;
+}
+
+/* Partido Reorder */
+.partido-reorder {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.reorder-btn {
+    background: transparent;
+    border: 1px solid #444;
+    color: #888;
+    width: 22px;
+    height: 18px;
+    min-width: 22px;
+    min-height: 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.55rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.2s;
+}
+
+.reorder-btn:hover:not(:disabled) {
+    background: #333;
+    color: #d4af37;
+    border-color: #d4af37;
+}
+
+.reorder-btn:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
 }
 
 .partido-datetime {
