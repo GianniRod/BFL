@@ -529,11 +529,10 @@ const EVT_ICON = {
     kickoff: 'KO', commercial: 'TV', game_end: 'FIN', missed_fg: 'NO',
 };
 
-// ── Component ──
 function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose, readOnlyResult, liveEngine, onStartLive, onSpeedChange, onSkipToEnd, matchDateTime, onSimulateUntil }) {
     const logRef = useRef(null);
+    const untilTimeRef = useRef(null);
     const [oddsMode, setOddsMode] = useState('decimal');
-    const [untilTime, setUntilTime] = useState('');
 
     // Determine phase and visible plays based on props
     let phase = 'idle';
@@ -610,6 +609,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
 
     // Simulate until logic
     const handleSimulateUntilClick = () => {
+        const untilTime = untilTimeRef.current?.value;
         if (!untilTime || !matchDateTime) return;
         const baseDate = new Date(matchDateTime);
         const [h, m] = untilTime.split(':').map(Number);
@@ -737,9 +737,9 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                                                 <input
                                                     type="time"
                                                     className="sim-until-input"
-                                                    value={untilTime}
+                                                    ref={untilTimeRef}
+                                                    defaultValue={getMinTime()}
                                                     min={getMinTime()}
-                                                    onChange={e => setUntilTime(e.target.value)}
                                                 />
                                                 <button className="sim-until-btn" onClick={handleSimulateUntilClick}>Simular hasta</button>
                                             </div>
