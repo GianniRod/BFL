@@ -1159,6 +1159,7 @@ function Liga() {
                         localTeam={localT}
                         visitanteTeam={visitanteT}
                         isLocalHome={true}
+                        matchDateTime={partido.dateTime}
                         readOnlyResult={readOnlyData}
                         liveEngine={liveEngine}
                         onStartLive={() => startLiveSimulation(simulatingPartido.fechaId, simulatingPartido.partidoId, localT, visitanteT)}
@@ -1171,7 +1172,19 @@ function Liga() {
                         }}
                         onSkipToEnd={() => {
                             if (liveEngine) {
-                                liveEngine.currentIndex = liveEngine.result.log.length; // Will trigger finish next tick
+                                liveEngine.currentIndex = liveEngine.result.log.length;
+                                updateLiveUI();
+                            }
+                        }}
+                        onSimulateUntil={(targetSeconds) => {
+                            if (liveEngine) {
+                                let targetIdx = liveEngine.result.log.findIndex(p => p.broadcastTime >= targetSeconds);
+                                if (targetIdx === -1) {
+                                    targetIdx = liveEngine.result.log.length;
+                                }
+                                liveEngine.currentIndex = Math.max(liveEngine.currentIndex, targetIdx);
+                                liveEngine.lastTickTime = Date.now();
+                                updateLiveUI();
                             }
                         }}
                         onFinish={(lScore, vScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime, scoreByQuarter) => {
