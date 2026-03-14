@@ -995,6 +995,19 @@
 
 .partido-card {
     margin-bottom: 10px;
+    border-radius: 8px;
+    background: transparent;
+}
+
+.partido-card.clickable .partido-row {
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.partido-card.clickable:hover .partido-row {
+    transform: translateY(-2px);
+    background-color: #222;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* Partido Reorder */
@@ -1054,7 +1067,7 @@
     margin-top: 2px;
 }
 
-/* ── Simulate Button & Score Display ── */
+/* ── Score Display ── */
 .partido-vs-area {
     display: flex;
     flex-direction: column;
@@ -1067,26 +1080,6 @@
     font-weight: 900;
     color: #555;
     letter-spacing: 3px;
-}
-
-.simulate-btn {
-    background: linear-gradient(135deg, #c9962b, #d4af37);
-    color: #000;
-    border: none;
-    padding: 6px 16px;
-    border-radius: 8px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s;
-    white-space: nowrap;
-    box-shadow: 0 3px 10px rgba(212, 175, 55, 0.2);
-}
-
-.simulate-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 16px rgba(212, 175, 55, 0.35);
-    background: linear-gradient(135deg, #d4af37, #e5c44a);
 }
 
 .score-display-final {
