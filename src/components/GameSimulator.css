@@ -274,7 +274,9 @@
     align-items: center;
 }
 
-.sim-speed-control {
+.sim-speed-control,
+.sim-real-time,
+.sim-until-control {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -282,6 +284,45 @@
     padding: 6px 12px;
     border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sim-until-control {
+    gap: 6px;
+    padding: 6px 8px;
+}
+
+.sim-real-time span {
+    color: #4ade80;
+    font-size: 0.85rem;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+.sim-until-input {
+    background: #111;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 0.8rem;
+    font-family: monospace;
+    outline: none;
+}
+
+.sim-until-btn {
+    background: linear-gradient(135deg, #1565c0, #1e88e5);
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.sim-until-btn:hover {
+    background: linear-gradient(135deg, #1e88e5, #42a5f5);
 }
 
 .sim-speed-label {
