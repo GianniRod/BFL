@@ -427,7 +427,40 @@ function Liga() {
         return `${day} ${dd}/${mm} - ${hh}:${min}`;
     };
 
-    const sortedStandings = [...standings]
+    // Compute standings dynamically from fechas
+    const computedStandings = leagueTeams.map(teamId => {
+        const stats = { teamId, v: 0, p: 0, e: 0, pf: 0, pc: 0, lastResults: [] };
+
+        fechas.forEach(f => {
+            f.partidos.forEach(p => {
+                if (p.localScore != null && p.visitanteScore != null) {
+                    if (p.localId === teamId) {
+                        stats.pf += p.localScore;
+                        stats.pc += p.visitanteScore;
+                        if (p.localScore > p.visitanteScore) { stats.v++; stats.lastResults.push('W'); }
+                        else if (p.localScore < p.visitanteScore) { stats.p++; stats.lastResults.push('L'); }
+                        else { stats.e++; stats.lastResults.push('T'); }
+                    } else if (p.visitanteId === teamId) {
+                        stats.pf += p.visitanteScore;
+                        stats.pc += p.localScore;
+                        if (p.visitanteScore > p.localScore) { stats.v++; stats.lastResults.push('W'); }
+                        else if (p.visitanteScore < p.localScore) { stats.p++; stats.lastResults.push('L'); }
+                        else { stats.e++; stats.lastResults.push('T'); }
+                    }
+                }
+            });
+        });
+
+        const totalGames = stats.v + stats.p + stats.e;
+        stats.pct = totalGames > 0 ? (stats.v / totalGames).toFixed(3) : '0.000';
+        stats.np = stats.pf - stats.pc;
+        // Keep only last 5 results
+        stats.lastResults = stats.lastResults.slice(-5);
+
+        return stats;
+    });
+
+    const sortedStandings = [...computedStandings]
         .sort((a, b) => {
             const pctA = parseFloat(a.pct) || 0;
             const pctB = parseFloat(b.pct) || 0;
