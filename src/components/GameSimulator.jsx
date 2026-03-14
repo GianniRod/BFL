@@ -375,7 +375,7 @@ function simulateGame(localTeamName, visitanteTeamName, isLocalHome, teamRatings
         if (yardLine >= 100) {
             if (possession === 'local') localScore += 7; else visitanteScore += 7;
             push({ desc: res.desc, eventType: 'play', down, yardsToGo, yardLine: 100 });
-            push({ desc: `🏈 ¡TOUCHDOWN ${tn(possession)}!`, eventType: 'touchdown' });
+            push({ desc: `¡TOUCHDOWN ${tn(possession)}!`, eventType: 'touchdown' });
             tick(randomBetween(5, 10));
             broadcastTime += 90;
             push({ desc: 'Pausa comercial', eventType: 'commercial' });
@@ -521,19 +521,19 @@ const EVT_CLASS = {
 };
 
 const EVT_ICON = {
-    touchdown: '🏈', field_goal: '🥅', turnover: '💥', punt: '👟', safety: '⚠️',
-    first_down: '🔵', two_min: '⏰', halftime: '🎵', quarter_end: '🔔',
-    kickoff: '🏈', commercial: '📺', game_end: '🏆', missed_fg: '✖️',
+    touchdown: 'TD', field_goal: 'FG', turnover: 'TO', punt: 'P', safety: 'SAF',
+    first_down: '1D', two_min: '2M', halftime: 'HT', quarter_end: 'Q',
+    kickoff: 'KO', commercial: 'TV', game_end: 'FIN', missed_fg: 'NO',
 };
 
 // ── Component ──
-function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose }) {
-    const [phase, setPhase] = useState('idle');
-    const [visiblePlays, setVisiblePlays] = useState([]);
+function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose, readOnlyResult }) {
+    const [phase, setPhase] = useState(readOnlyResult ? 'finished' : 'idle');
+    const [visiblePlays, setVisiblePlays] = useState(readOnlyResult?.log || []);
     const [speed, setSpeed] = useState(1);
     const [oddsMode, setOddsMode] = useState('decimal'); // 'decimal' | 'pct'
 
-    const gameResultRef = useRef(null);
+    const gameResultRef = useRef(readOnlyResult || null);
     const logRef = useRef(null);
     const timerRef = useRef(null);
     const indexRef = useRef(0);
@@ -613,7 +613,12 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
 
     const handleSave = () => {
         const r = gameResultRef.current;
-        if (r && onFinish) onFinish(r.localScore, r.visitanteScore);
+        if (r && onFinish) {
+            const scoringPlays = r.log.filter(l =>
+                ['touchdown', 'field_goal', 'safety', 'pick_six', 'game_end'].includes(l.eventType)
+            );
+            onFinish(r.localScore, r.visitanteScore, r.stats, scoringPlays, r.totalPlays, r.driveCount, r.broadcastTime);
+        }
     };
 
     const last = visiblePlays.length > 0 ? visiblePlays[visiblePlays.length - 1] : null;
@@ -693,7 +698,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                 {phase === 'idle' && (
                     <div className="sim-idle-area">
                         <div className="sim-matchup-vs">VS</div>
-                        <button className="sim-start-btn" onClick={startSimulation}>🏈 Simular Partido</button>
+                        <button className="sim-start-btn" onClick={startSimulation}>Iniciar Simulación</button>
                     </div>
                 )}
 
@@ -705,8 +710,8 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                             <div className="sim-log-controls">
                                 {phase === 'simulating' && (
                                     <>
-                                        <button className="sim-speed-btn" onClick={changeSpeed}>{speed}x</button>
-                                        <button className="sim-skip-btn" onClick={skipToEnd}>⏭ Saltar</button>
+                                        <button className="sim-speed-btn" onClick={changeSpeed}>Velocidad: {speed}x</button>
+                                        <button className="sim-skip-btn" onClick={skipToEnd}>Ver Resultado Final</button>
                                     </>
                                 )}
                             </div>
@@ -745,7 +750,9 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                             <span>Drives: {result.driveCount}</span>
                             <span>Duración TV: {fmtTime(result.broadcastTime)}</span>
                         </div>
-                        <button className="sim-save-btn" onClick={handleSave}>✅ Guardar Resultado</button>
+                        {!readOnlyResult && (
+                            <button className="sim-save-btn" onClick={handleSave}>Guardar Resultado</button>
+                        )}
                     </div>
                 )}
             </div>
