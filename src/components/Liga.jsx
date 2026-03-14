@@ -109,6 +109,18 @@ function Liga() {
                 const currentPlay = sim.result.log[sim.currentIndex];
                 const nextPlay = sim.result.log[sim.currentIndex + 1];
 
+                if (sim.targetIndex != null && sim.currentIndex < sim.targetIndex) {
+                    const advanceAmount = Math.max(1, Math.min(15, Math.floor((sim.targetIndex - sim.currentIndex) / 3)));
+                    sim.currentIndex += advanceAmount;
+                    if (sim.currentIndex >= sim.targetIndex) {
+                        sim.currentIndex = sim.targetIndex;
+                        sim.targetIndex = null;
+                        sim.lastTickTime = now;
+                    }
+                    hasChanges = true;
+                    return;
+                }
+
                 if (nextPlay) {
                     let diff = (nextPlay.broadcastTime || 0) - (currentPlay.broadcastTime || 0);
                     if (diff < 1 || isNaN(diff)) diff = 5;
@@ -1201,9 +1213,7 @@ function Liga() {
                                 if (targetIdx === -1) {
                                     targetIdx = liveEngine.result.log.length;
                                 }
-                                liveEngine.currentIndex = Math.max(liveEngine.currentIndex, targetIdx);
-                                liveEngine.lastTickTime = Date.now();
-                                updateLiveUI();
+                                liveEngine.targetIndex = targetIdx;
                             }
                         }}
                         onFinish={(lScore, vScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime, scoreByQuarter) => {
