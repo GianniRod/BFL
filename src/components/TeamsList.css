@@ -75,8 +75,9 @@
 .half-star {
     display: inline-block;
     overflow: hidden;
-    width: 0.55em;
-    color: gold;
+    width: 0.5em;
+    vertical-align: baseline;
+    line-height: 1;
 }
 
 .star-row {
@@ -90,12 +91,13 @@
     font-size: 0.85rem;
     color: #aaa;
     min-width: 65px;
+    flex-shrink: 0;
 }
 
 .star-editor {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
 }
 
 .star-adj-btn {
@@ -113,6 +115,7 @@
     transition: all 0.2s;
     padding: 0;
     line-height: 1;
+    flex-shrink: 0;
 }
 
 .star-adj-btn:hover {
@@ -124,12 +127,15 @@
 .star-display {
     color: gold;
     font-size: 0.95rem;
-    letter-spacing: 1px;
+    white-space: nowrap;
+    letter-spacing: 0;
+    line-height: 1;
 }
 
 .star-value {
     font-size: 0.7rem;
     color: #666;
-    min-width: 20px;
+    min-width: 22px;
     text-align: center;
+    flex-shrink: 0;
 }
