@@ -869,9 +869,13 @@ function Liga() {
                                                                     <>
                                                                         {partido.localScore !== null && partido.visitanteScore !== null ? (
                                                                             <div className="score-display-final">
-                                                                                <span className="score-num">{partido.localScore}</span>
+                                                                                <span className={`score-num ${Number(partido.localScore) < Number(partido.visitanteScore) ? 'loser-score' : ''}`}>
+                                                                                    {partido.localScore}
+                                                                                </span>
                                                                                 <span className="score-separator">-</span>
-                                                                                <span className="score-num">{partido.visitanteScore}</span>
+                                                                                <span className={`score-num ${Number(partido.visitanteScore) < Number(partido.localScore) ? 'loser-score' : ''}`}>
+                                                                                    {partido.visitanteScore}
+                                                                                </span>
                                                                             </div>
                                                                         ) : (
                                                                             <div className="partido-vs-area">
