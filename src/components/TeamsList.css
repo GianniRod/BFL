@@ -72,12 +72,38 @@
     color: gold;
 }
 
-.half-star {
+.star-icon {
     display: inline-block;
-    overflow: hidden;
-    width: 0.5em;
-    vertical-align: baseline;
+    width: 1em;
+    text-align: center;
+    font-size: inherit;
     line-height: 1;
+}
+
+.star-icon.full {
+    color: gold;
+}
+
+.star-icon.empty {
+    color: #444;
+}
+
+.star-icon.half-wrap {
+    position: relative;
+    color: #444;
+}
+
+.star-empty {
+    color: #444;
+}
+
+.star-half-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0.5em;
+    overflow: hidden;
+    color: gold;
 }
 
 .star-row {
