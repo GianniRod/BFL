@@ -573,11 +573,27 @@
     gap: 10px;
 }
 
-.partido-team {
+.partido-left-side,
+.partido-right-side {
     display: flex;
     align-items: center;
     gap: 10px;
     flex: 1;
+    min-width: 0;
+}
+
+.partido-left-side {
+    justify-content: flex-start;
+}
+
+.partido-right-side {
+    justify-content: flex-end;
+}
+
+.partido-team {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     min-width: 0;
 }
 
