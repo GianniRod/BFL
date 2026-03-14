@@ -177,7 +177,7 @@ function Liga() {
         await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
 
-    const updatePartidoBothScores = async (fechaId, partidoId, localScore, visitanteScore) => {
+    const updatePartidoBothScores = async (fechaId, partidoId, localScore, visitanteScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime) => {
         const newFechas = fechas.map(f =>
             f.id === fechaId ? {
                 ...f,
@@ -185,7 +185,12 @@ function Liga() {
                     p.id === partidoId ? {
                         ...p,
                         localScore: localScore === '' ? null : parseInt(localScore),
-                        visitanteScore: visitanteScore === '' ? null : parseInt(visitanteScore)
+                        visitanteScore: visitanteScore === '' ? null : parseInt(visitanteScore),
+                        stats: stats || p.stats || null,
+                        scoringPlays: scoringPlays || p.scoringPlays || null,
+                        totalPlays: totalPlays || p.totalPlays || null,
+                        driveCount: driveCount || p.driveCount || null,
+                        broadcastTime: broadcastTime || p.broadcastTime || null
                     } : p
                 )
             } : f
@@ -792,21 +797,33 @@ function Liga() {
                                                 const visitante = getTeamById(partido.visitanteId);
                                                 const totalPartidos = fechas[selectedFechaIndex].partidos.length;
                                                 return (
-                                                    <div key={partido.id} className="partido-card">
+                                                    <div
+                                                        key={partido.id}
+                                                        className={`partido-card ${!showConfig ? 'clickable' : ''}`}
+                                                        onClick={() => {
+                                                            if (!showConfig) {
+                                                                setSimulatingPartido({
+                                                                    fechaId: fechas[selectedFechaIndex].id,
+                                                                    partidoId: partido.id,
+                                                                    readOnly: partido.localScore !== null && partido.visitanteScore !== null
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
                                                         <div className="partido-row">
                                                             {showConfig && (
                                                                 <div className="partido-reorder">
                                                                     <button
                                                                         className="reorder-btn"
                                                                         disabled={partidoIdx === 0}
-                                                                        onClick={() => movePartido(fechas[selectedFechaIndex].id, partidoIdx, -1)}
+                                                                        onClick={(e) => { e.stopPropagation(); movePartido(fechas[selectedFechaIndex].id, partidoIdx, -1); }}
                                                                     >
                                                                         ▲
                                                                     </button>
                                                                     <button
                                                                         className="reorder-btn"
                                                                         disabled={partidoIdx === totalPartidos - 1}
-                                                                        onClick={() => movePartido(fechas[selectedFechaIndex].id, partidoIdx, 1)}
+                                                                        onClick={(e) => { e.stopPropagation(); movePartido(fechas[selectedFechaIndex].id, partidoIdx, 1); }}
                                                                     >
                                                                         ▼
                                                                     </button>
@@ -822,7 +839,7 @@ function Liga() {
                                                                 {showConfig ? (
                                                                     /* Admin mode: manual score editing */
                                                                     <>
-                                                                        <div className="partido-score">
+                                                                        <div className="partido-score" onClick={(e) => e.stopPropagation()}>
                                                                             <input
                                                                                 type="number"
                                                                                 min="0"
@@ -844,10 +861,11 @@ function Liga() {
                                                                             className="datetime-edit-input"
                                                                             value={partido.dateTime || ''}
                                                                             onChange={(e) => updatePartidoDateTime(fechas[selectedFechaIndex].id, partido.id, e.target.value)}
+                                                                            onClick={(e) => e.stopPropagation()}
                                                                         />
                                                                     </>
                                                                 ) : (
-                                                                    /* Normal mode: display score or VS + simulate */
+                                                                    /* Normal mode: display score or VS entirely dictated by click state above */
                                                                     <>
                                                                         {partido.localScore !== null && partido.visitanteScore !== null ? (
                                                                             <div className="score-display-final">
@@ -858,12 +876,6 @@ function Liga() {
                                                                         ) : (
                                                                             <div className="partido-vs-area">
                                                                                 <span className="vs-badge">VS</span>
-                                                                                <button
-                                                                                    className="simulate-btn"
-                                                                                    onClick={() => setSimulatingPartido({ fechaId: fechas[selectedFechaIndex].id, partidoId: partido.id })}
-                                                                                >
-                                                                                    🏈 Simular
-                                                                                </button>
                                                                             </div>
                                                                         )}
                                                                         {partido.dateTime && (
@@ -882,7 +894,7 @@ function Liga() {
                                                             </div>
                                                             <button
                                                                 className="remove-partido-btn"
-                                                                onClick={() => removePartido(fechas[selectedFechaIndex].id, partido.id)}
+                                                                onClick={(e) => { e.stopPropagation(); removePartido(fechas[selectedFechaIndex].id, partido.id); }}
                                                             >
                                                                 ✕
                                                             </button>
@@ -936,13 +948,25 @@ function Liga() {
                 if (!fecha || !partido) return null;
                 const localT = getTeamById(partido.localId);
                 const visitanteT = getTeamById(partido.visitanteId);
+
+                const readOnlyData = simulatingPartido.readOnly ? {
+                    localScore: partido.localScore,
+                    visitanteScore: partido.visitanteScore,
+                    stats: partido.stats,
+                    log: partido.scoringPlays || [],
+                    totalPlays: partido.totalPlays || 0,
+                    driveCount: partido.driveCount || 0,
+                    broadcastTime: partido.broadcastTime || 0,
+                } : null;
+
                 return (
                     <GameSimulator
                         localTeam={localT}
                         visitanteTeam={visitanteT}
                         isLocalHome={true}
-                        onFinish={(lScore, vScore) => {
-                            updatePartidoBothScores(simulatingPartido.fechaId, simulatingPartido.partidoId, String(lScore), String(vScore));
+                        readOnlyResult={readOnlyData}
+                        onFinish={(lScore, vScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime) => {
+                            updatePartidoBothScores(simulatingPartido.fechaId, simulatingPartido.partidoId, String(lScore), String(vScore), stats, scoringPlays, totalPlays, driveCount, broadcastTime);
                             setSimulatingPartido(null);
                         }}
                         onClose={() => setSimulatingPartido(null)}
@@ -954,7 +978,7 @@ function Liga() {
             {showCalendarModal && (
                 <div className="calendar-modal-overlay" onClick={() => setShowCalendarModal(false)}>
                     <div className="calendar-modal" onClick={(e) => e.stopPropagation()}>
-                        <h3>📅 Generar Calendario Automáticamente</h3>
+                        <h3>Generar Calendario Automáticamente</h3>
                         <p className="modal-subtitle">Todos contra todos, ida y vuelta</p>
 
                         {fechas.length > 0 && (
