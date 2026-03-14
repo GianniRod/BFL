@@ -82,6 +82,7 @@ function Liga() {
                     visitanteScore: play.visitanteScore,
                     quarter: play.quarter,
                     clock: play.gameClock,
+                    possession: play.possession,
                     speed: sim.speed,
                     isActive: true
                 };
@@ -992,6 +993,9 @@ function Liga() {
                                                                     <img src={local['URL PHOTO']} alt="" className="partido-logo" />
                                                                 )}
                                                                 <span>{local?.['Team Name'] || 'Equipo'}</span>
+                                                                {liveMatchesUI[partido.id]?.possession === 'local' && (
+                                                                    <span className="possession-icon">🏈</span>
+                                                                )}
                                                             </div>
                                                             <div className="partido-center">
                                                                 {showConfig ? (
@@ -1028,8 +1032,8 @@ function Liga() {
                                                                         {liveMatchesUI[partido.id] ? (
                                                                             <div className="live-match-card-display">
                                                                                 <div className="live-badge-row">
-                                                                                    <span className="live-pulse"></span> <span className="live-text-badge">EN VIVO</span>
-                                                                                    <span className="live-clock"> Q{liveMatchesUI[partido.id].quarter} {Math.floor(liveMatchesUI[partido.id].clock / 60)}:{(liveMatchesUI[partido.id].clock % 60).toString().padStart(2, '0')}</span>
+                                                                                    <span className="live-pulse"></span>
+                                                                                    <span className="live-text-badge">EN VIVO Q{liveMatchesUI[partido.id].quarter} {Math.floor(liveMatchesUI[partido.id].clock / 60)}:{(liveMatchesUI[partido.id].clock % 60).toString().padStart(2, '0')}</span>
                                                                                 </div>
                                                                                 <div className="score-display-final">
                                                                                     <span className="score-num">{liveMatchesUI[partido.id].localScore}</span>
@@ -1052,7 +1056,7 @@ function Liga() {
                                                                                 <span className="vs-badge">VS</span>
                                                                             </div>
                                                                         )}
-                                                                        {partido.dateTime && (
+                                                                        {partido.dateTime && !liveMatchesUI[partido.id] && (
                                                                             <div className="partido-datetime">
                                                                                 {formatDateTime(partido.dateTime)}
                                                                             </div>
@@ -1061,6 +1065,9 @@ function Liga() {
                                                                 )}
                                                             </div>
                                                             <div className="partido-team visitante">
+                                                                {liveMatchesUI[partido.id]?.possession === 'visitante' && (
+                                                                    <span className="possession-icon">🏈</span>
+                                                                )}
                                                                 <span>{visitante?.['Team Name'] || 'Equipo'}</span>
                                                                 {visitante?.['URL PHOTO'] && (
                                                                     <img src={visitante['URL PHOTO']} alt="" className="partido-logo" />
@@ -1152,7 +1159,11 @@ function Liga() {
                         liveEngine={liveEngine}
                         onStartLive={() => startLiveSimulation(simulatingPartido.fechaId, simulatingPartido.partidoId, localT, visitanteT)}
                         onSpeedChange={(newSpeed) => {
-                            if (liveEngine) liveEngine.speed = newSpeed;
+                            if (liveEngine) {
+                                liveEngine.speed = newSpeed;
+                                liveEngine.lastTickTime = Date.now();
+                                updateLiveUI();
+                            }
                         }}
                         onSkipToEnd={() => {
                             if (liveEngine) {
