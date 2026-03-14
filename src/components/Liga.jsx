@@ -3,6 +3,7 @@ import { subscribeToTeams } from '../services/db';
 import { db } from '../firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import './Liga.css';
+import GameSimulator from './GameSimulator';
 
 const YEARS = [2024, 2025, 2026];
 
@@ -28,6 +29,7 @@ function Liga() {
     const [positionLabels, setPositionLabels] = useState([]);
     const [showCalendarModal, setShowCalendarModal] = useState(false);
     const [calendarStartDate, setCalendarStartDate] = useState('');
+    const [simulatingPartido, setSimulatingPartido] = useState(null); // { fechaId, partidoId }
 
     // Subscribe to all teams
     useEffect(() => {
@@ -767,35 +769,59 @@ function Liga() {
                                                                 <span>{local?.['Team Name'] || 'Equipo'}</span>
                                                             </div>
                                                             <div className="partido-center">
-                                                                <div className="partido-score">
-                                                                    <input
-                                                                        type="number"
-                                                                        min="0"
-                                                                        className="score-input"
-                                                                        value={partido.localScore ?? ''}
-                                                                        onChange={(e) => updatePartidoScore(fechas[selectedFechaIndex].id, partido.id, 'localScore', e.target.value)}
-                                                                    />
-                                                                    <span className="score-separator">-</span>
-                                                                    <input
-                                                                        type="number"
-                                                                        min="0"
-                                                                        className="score-input"
-                                                                        value={partido.visitanteScore ?? ''}
-                                                                        onChange={(e) => updatePartidoScore(fechas[selectedFechaIndex].id, partido.id, 'visitanteScore', e.target.value)}
-                                                                    />
-                                                                </div>
-                                                                {partido.dateTime && !showConfig && (
-                                                                    <div className="partido-datetime">
-                                                                        {formatDateTime(partido.dateTime)}
-                                                                    </div>
-                                                                )}
-                                                                {showConfig && (
-                                                                    <input
-                                                                        type="datetime-local"
-                                                                        className="datetime-edit-input"
-                                                                        value={partido.dateTime || ''}
-                                                                        onChange={(e) => updatePartidoDateTime(fechas[selectedFechaIndex].id, partido.id, e.target.value)}
-                                                                    />
+                                                                {showConfig ? (
+                                                                    /* Admin mode: manual score editing */
+                                                                    <>
+                                                                        <div className="partido-score">
+                                                                            <input
+                                                                                type="number"
+                                                                                min="0"
+                                                                                className="score-input"
+                                                                                value={partido.localScore ?? ''}
+                                                                                onChange={(e) => updatePartidoScore(fechas[selectedFechaIndex].id, partido.id, 'localScore', e.target.value)}
+                                                                            />
+                                                                            <span className="score-separator">-</span>
+                                                                            <input
+                                                                                type="number"
+                                                                                min="0"
+                                                                                className="score-input"
+                                                                                value={partido.visitanteScore ?? ''}
+                                                                                onChange={(e) => updatePartidoScore(fechas[selectedFechaIndex].id, partido.id, 'visitanteScore', e.target.value)}
+                                                                            />
+                                                                        </div>
+                                                                        <input
+                                                                            type="datetime-local"
+                                                                            className="datetime-edit-input"
+                                                                            value={partido.dateTime || ''}
+                                                                            onChange={(e) => updatePartidoDateTime(fechas[selectedFechaIndex].id, partido.id, e.target.value)}
+                                                                        />
+                                                                    </>
+                                                                ) : (
+                                                                    /* Normal mode: display score or VS + simulate */
+                                                                    <>
+                                                                        {partido.localScore !== null && partido.visitanteScore !== null ? (
+                                                                            <div className="score-display-final">
+                                                                                <span className="score-num">{partido.localScore}</span>
+                                                                                <span className="score-separator">-</span>
+                                                                                <span className="score-num">{partido.visitanteScore}</span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="partido-vs-area">
+                                                                                <span className="vs-badge">VS</span>
+                                                                                <button
+                                                                                    className="simulate-btn"
+                                                                                    onClick={() => setSimulatingPartido({ fechaId: fechas[selectedFechaIndex].id, partidoId: partido.id })}
+                                                                                >
+                                                                                    🏈 Simular
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                        {partido.dateTime && (
+                                                                            <div className="partido-datetime">
+                                                                                {formatDateTime(partido.dateTime)}
+                                                                            </div>
+                                                                        )}
+                                                                    </>
                                                                 )}
                                                             </div>
                                                             <div className="partido-team visitante">
@@ -852,6 +878,28 @@ function Liga() {
                     </div>
                 </div>
             )}
+
+            {/* Game Simulator Modal */}
+            {simulatingPartido && (() => {
+                const fecha = fechas.find(f => f.id === simulatingPartido.fechaId);
+                const partido = fecha?.partidos.find(p => p.id === simulatingPartido.partidoId);
+                if (!fecha || !partido) return null;
+                const localT = getTeamById(partido.localId);
+                const visitanteT = getTeamById(partido.visitanteId);
+                return (
+                    <GameSimulator
+                        localTeam={localT}
+                        visitanteTeam={visitanteT}
+                        isLocalHome={true}
+                        onFinish={(lScore, vScore) => {
+                            updatePartidoScore(simulatingPartido.fechaId, simulatingPartido.partidoId, 'localScore', String(lScore));
+                            updatePartidoScore(simulatingPartido.fechaId, simulatingPartido.partidoId, 'visitanteScore', String(vScore));
+                            setSimulatingPartido(null);
+                        }}
+                        onClose={() => setSimulatingPartido(null)}
+                    />
+                );
+            })()}
 
             {/* Calendar Generation Modal */}
             {showCalendarModal && (
