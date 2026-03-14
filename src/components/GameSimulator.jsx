@@ -530,9 +530,10 @@ const EVT_ICON = {
 };
 
 // ── Component ──
-function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose, readOnlyResult, liveEngine, onStartLive, onSpeedChange, onSkipToEnd }) {
+function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose, readOnlyResult, liveEngine, onStartLive, onSpeedChange, onSkipToEnd, matchDateTime, onSimulateUntil }) {
     const logRef = useRef(null);
     const [oddsMode, setOddsMode] = useState('decimal');
+    const [untilTime, setUntilTime] = useState('');
 
     // Determine phase and visible plays based on props
     let phase = 'idle';
@@ -587,6 +588,33 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
     const visitS = last ? last.visitanteScore : 0;
     const curQ = last ? (last.quarter || 1) : 1;
     const curClk = last ? (last.gameClock ?? 900) : 900;
+
+    // Simulate until logic
+    const handleSimulateUntilClick = () => {
+        if (!untilTime || !matchDateTime) return;
+        const baseDate = new Date(matchDateTime);
+        const [h, m] = untilTime.split(':').map(Number);
+        const targetDate = new Date(baseDate);
+        targetDate.setHours(h, m, 0, 0);
+
+        // If target time is earlier than start time, assume it's the next day
+        if (targetDate < baseDate) {
+            targetDate.setDate(targetDate.getDate() + 1);
+        }
+
+        const targetSeconds = (targetDate.getTime() - baseDate.getTime()) / 1000;
+        if (targetSeconds > 0 && onSimulateUntil) {
+            onSimulateUntil(targetSeconds);
+        }
+    };
+
+    const fmtElapsed = (secs) => {
+        const h = Math.floor(secs / 3600);
+        const m = Math.floor((secs % 3600) / 60);
+        const s = Math.floor(secs % 60);
+        if (h > 0) return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+        return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+    };
 
     // Get current odds from pre-computed timeline
     const playIdx = visiblePlays.length - 1;
@@ -676,6 +704,20 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                             <div className="sim-log-controls">
                                 {phase === 'simulating' && (
                                     <>
+                                        <div className="sim-real-time">
+                                            <span>⏱️ T. Real: {fmtElapsed(last?.broadcastTime || 0)}</span>
+                                        </div>
+                                        {matchDateTime && (
+                                            <div className="sim-until-control">
+                                                <input
+                                                    type="time"
+                                                    className="sim-until-input"
+                                                    value={untilTime}
+                                                    onChange={e => setUntilTime(e.target.value)}
+                                                />
+                                                <button className="sim-until-btn" onClick={handleSimulateUntilClick}>Simular hasta</button>
+                                            </div>
+                                        )}
                                         <div className="sim-speed-control">
                                             <span className="sim-speed-label">{speed}x</span>
                                             <input
@@ -686,7 +728,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                                                 className="sim-speed-slider"
                                             />
                                         </div>
-                                        <button className="sim-skip-btn" onClick={skipToEnd}>Ver Resultado Final</button>
+                                        <button className="sim-skip-btn" onClick={skipToEnd}>Fin</button>
                                     </>
                                 )}
                             </div>
