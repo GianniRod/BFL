@@ -177,6 +177,23 @@ function Liga() {
         await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
 
+    const updatePartidoBothScores = async (fechaId, partidoId, localScore, visitanteScore) => {
+        const newFechas = fechas.map(f =>
+            f.id === fechaId ? {
+                ...f,
+                partidos: f.partidos.map(p =>
+                    p.id === partidoId ? {
+                        ...p,
+                        localScore: localScore === '' ? null : parseInt(localScore),
+                        visitanteScore: visitanteScore === '' ? null : parseInt(visitanteScore)
+                    } : p
+                )
+            } : f
+        );
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
+    };
+
     const updatePartidoDateTime = async (fechaId, partidoId, dateTime) => {
         const newFechas = fechas.map(f =>
             f.id === fechaId ? {
@@ -892,8 +909,7 @@ function Liga() {
                         visitanteTeam={visitanteT}
                         isLocalHome={true}
                         onFinish={(lScore, vScore) => {
-                            updatePartidoScore(simulatingPartido.fechaId, simulatingPartido.partidoId, 'localScore', String(lScore));
-                            updatePartidoScore(simulatingPartido.fechaId, simulatingPartido.partidoId, 'visitanteScore', String(vScore));
+                            updatePartidoBothScores(simulatingPartido.fechaId, simulatingPartido.partidoId, String(lScore), String(vScore));
                             setSimulatingPartido(null);
                         }}
                         onClose={() => setSimulatingPartido(null)}
