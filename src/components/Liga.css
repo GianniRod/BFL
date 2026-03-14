@@ -333,16 +333,18 @@
     border: 1px solid #333;
     border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .carousel-nav {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 15px;
-    padding: 15px 20px;
-    background: #222;
-    border-bottom: 1px solid #333;
+    gap: 20px;
+    padding: 16px 24px;
+    background: linear-gradient(180deg, #262a33 0%, #1a1d24 100%);
+    border-bottom: 1px solid #2a2f3a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .carousel-arrow {
@@ -374,8 +376,18 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     cursor: pointer;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.fecha-selector:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(212, 175, 55, 0.3);
 }
 
 .fecha-selector .fecha-nombre-input {
@@ -514,26 +526,27 @@
 }
 
 .remove-fecha-btn {
-    background: #b71c1c;
+    background: transparent;
     border: none;
-    color: white;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    border-radius: 50%;
+    color: #888;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 0.85rem;
-    line-height: 1;
+    font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.3s;
+    transition: all 0.2s ease;
     padding: 0;
 }
 
 .remove-fecha-btn:hover {
-    background: #c62828;
+    background: rgba(244, 67, 54, 0.1);
+    color: #ef5350;
+    transform: scale(1.1);
 }
 
 .fecha-partidos {
@@ -1093,6 +1106,12 @@
     font-weight: 900;
     color: #d4af37;
     font-variant-numeric: tabular-nums;
+    transition: opacity 0.3s ease;
+}
+
+.score-display-final .score-num.loser-score {
+    opacity: 0.5;
+    color: #888;
 }
 
 .score-display-final .score-separator {
