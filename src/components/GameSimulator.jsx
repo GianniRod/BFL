@@ -504,6 +504,11 @@ const toDecimalOdds = (pct) => {
     return (100 / pct).toFixed(2);
 };
 
+const parseStarValue = (v) => {
+    const num = parseFloat(v) || 0;
+    return num > 5 ? num / 10 : num;
+};
+
 
 
 // ── Event styling ──
@@ -574,10 +579,10 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
             visitanteTeam?.['Team Name'] || 'Visitante',
             isLocalHome,
             {
-                localOff: localTeam?.['Offensive Stars'] || 3,
-                localDef: localTeam?.['Deffensive Stars'] || 3,
-                visitOff: visitanteTeam?.['Offensive Stars'] || 3,
-                visitDef: visitanteTeam?.['Deffensive Stars'] || 3,
+                localOff: parseStarValue(localTeam?.['Offensive Stars'] || 3),
+                localDef: parseStarValue(localTeam?.['Deffensive Stars'] || 3),
+                visitOff: parseStarValue(visitanteTeam?.['Offensive Stars'] || 3),
+                visitDef: parseStarValue(visitanteTeam?.['Deffensive Stars'] || 3),
             }
         );
         gameResultRef.current = result;
