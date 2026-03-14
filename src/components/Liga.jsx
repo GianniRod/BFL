@@ -35,6 +35,60 @@ function Liga() {
     const activeSimsRef = useRef({});
     const [liveMatchesUI, setLiveMatchesUI] = useState({});
 
+    // Restore live simulations from localStorage on mount
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('bfl_live_sims');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                Object.entries(parsed).forEach(([pid, sim]) => {
+                    // Calculate how much real time passed while page was closed
+                    const elapsedMs = Date.now() - (sim.savedAt || Date.now());
+                    const elapsedSecs = elapsedMs / 1000;
+
+                    // Fast-forward the simulation by the elapsed real seconds at speed 1x
+                    let idx = sim.currentIndex;
+                    let accumulatedTime = 0;
+                    while (idx < sim.result.log.length - 1) {
+                        const cur = sim.result.log[idx];
+                        const next = sim.result.log[idx + 1];
+                        let diff = (next.broadcastTime || 0) - (cur.broadcastTime || 0);
+                        if (diff < 1 || isNaN(diff)) diff = 5;
+                        accumulatedTime += diff;
+                        if (accumulatedTime > elapsedSecs) break;
+                        idx++;
+                    }
+
+                    activeSimsRef.current[pid] = {
+                        ...sim,
+                        currentIndex: idx,
+                        lastTickTime: Date.now(),
+                        speed: sim.speed || 1
+                    };
+                });
+                // Trigger UI update
+                const newState = {};
+                Object.entries(activeSimsRef.current).forEach(([pid, sim]) => {
+                    const play = sim.result.log[Math.min(sim.currentIndex, sim.result.log.length - 1)];
+                    if (play) {
+                        newState[pid] = {
+                            localScore: play.localScore,
+                            visitanteScore: play.visitanteScore,
+                            quarter: play.quarter,
+                            clock: play.gameClock,
+                            possession: play.possession,
+                            speed: sim.speed,
+                            isActive: true
+                        };
+                    }
+                });
+                setLiveMatchesUI(newState);
+            }
+        } catch (e) {
+            console.warn('Failed to restore live sims:', e);
+        }
+    }, []);
+
     // Subscribe to all teams
     useEffect(() => {
         const unsubscribe = subscribeToTeams((data) => {
@@ -159,11 +213,40 @@ function Liga() {
                     return prev;
                 });
 
+                // Clean up localStorage for finished matches
+                try {
+                    const saved = JSON.parse(localStorage.getItem('bfl_live_sims') || '{}');
+                    delete saved[pid];
+                    if (Object.keys(saved).length > 0) {
+                        localStorage.setItem('bfl_live_sims', JSON.stringify(saved));
+                    } else {
+                        localStorage.removeItem('bfl_live_sims');
+                    }
+                } catch (e) { /* ignore */ }
+
                 hasChanges = true;
             });
 
             if (hasChanges) {
                 updateLiveUI();
+                // Save state to localStorage
+                try {
+                    const toSave = {};
+                    Object.entries(activeSimsRef.current).forEach(([pid, sim]) => {
+                        toSave[pid] = {
+                            fechaId: sim.fechaId,
+                            result: sim.result,
+                            currentIndex: sim.currentIndex,
+                            speed: sim.speed,
+                            savedAt: Date.now()
+                        };
+                    });
+                    if (Object.keys(toSave).length > 0) {
+                        localStorage.setItem('bfl_live_sims', JSON.stringify(toSave));
+                    } else {
+                        localStorage.removeItem('bfl_live_sims');
+                    }
+                } catch (e) { /* ignore quota errors */ }
             }
         }, 100);
 
