@@ -64,6 +64,9 @@ function Liga() {
         return () => unsubscribe();
     }, [selectedYear]);
 
+    // Keep a fresh reference to updatePartidoBothScores to avoid stale closures in setInterval
+    const updatePartidoBothScoresRef = useRef(null);
+
     // Set selected fecha to the last one when fechas change
     useEffect(() => {
         if (fechas.length > 0 && selectedFechaIndex === null) {
@@ -128,10 +131,13 @@ function Liga() {
                 const scoringPlays = r.log.filter(l =>
                     ['touchdown', 'field_goal', 'safety', 'pick_six', 'game_end'].includes(l.eventType)
                 );
-                updatePartidoBothScores(
-                    sim.fechaId, Number(pid), String(r.localScore), String(r.visitanteScore),
-                    r.stats, scoringPlays, r.totalPlays, r.driveCount, r.broadcastTime, r.scoreByQuarter
-                );
+
+                if (updatePartidoBothScoresRef.current) {
+                    updatePartidoBothScoresRef.current(
+                        sim.fechaId, Number(pid), String(r.localScore), String(r.visitanteScore),
+                        r.stats, scoringPlays, r.totalPlays, r.driveCount, r.broadcastTime, r.scoreByQuarter
+                    );
+                }
 
                 // If this match is currently open in the GameSimulator, update it to readOnly mode
                 setSimulatingPartido(prev => {
@@ -364,6 +370,10 @@ function Liga() {
         const docRef = doc(db, 'leagueConfig', String(selectedYear));
         await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
+
+    useEffect(() => {
+        updatePartidoBothScoresRef.current = updatePartidoBothScores;
+    }, [updatePartidoBothScores]);
 
     const updatePartidoDateTime = async (fechaId, partidoId, dateTime) => {
         const newFechas = fechas.map(f =>
