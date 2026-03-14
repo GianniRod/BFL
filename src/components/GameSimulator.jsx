@@ -410,8 +410,8 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
             push({ desc: res.desc, eventType: 'play', down: down - 1, yardsToGo: yardsToGo + (res.incomplete ? 0 : res.yards), yardLine });
         }
 
-        if (totalPlays >= 145) {
-            while (quarter < 4) { gameClock[quarter] = 0; quarter++; }
+        if (totalPlays >= 300) {
+            while (quarter <= 4) { gameClock[quarter] = 0; quarter++; }
             break;
         }
     }
