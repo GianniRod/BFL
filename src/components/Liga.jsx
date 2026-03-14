@@ -129,9 +129,18 @@ function Liga() {
                     ['touchdown', 'field_goal', 'safety', 'pick_six', 'game_end'].includes(l.eventType)
                 );
                 updatePartidoBothScores(
-                    sim.fechaId, pid, String(r.localScore), String(r.visitanteScore),
+                    sim.fechaId, Number(pid), String(r.localScore), String(r.visitanteScore),
                     r.stats, scoringPlays, r.totalPlays, r.driveCount, r.broadcastTime, r.scoreByQuarter
                 );
+
+                // If this match is currently open in the GameSimulator, update it to readOnly mode
+                setSimulatingPartido(prev => {
+                    if (prev && prev.partidoId === Number(pid)) {
+                        return { ...prev, readOnly: true };
+                    }
+                    return prev;
+                });
+
                 hasChanges = true;
             });
 
