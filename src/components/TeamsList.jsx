@@ -65,6 +65,20 @@ function TeamsList() {
         );
     }
 
+    const renderStars = (rating) => {
+        const val = Math.min(5, Math.max(0, parseFloat(rating) || 0));
+        const full = Math.floor(val);
+        const hasHalf = val % 1 >= 0.5;
+        const empty = 5 - full - (hasHalf ? 1 : 0);
+        return (
+            <>
+                {'★'.repeat(full)}
+                {hasHalf && <span className="half-star">★</span>}
+                {'☆'.repeat(empty)}
+            </>
+        );
+    };
+
     return (
         <div className="teams-grid">
             {teams.map((team) => (
@@ -82,8 +96,8 @@ function TeamsList() {
                         <p><strong>Ciudad:</strong> {team['City']}</p>
                         <p><strong>Títulos:</strong> {team['League Titles']}</p>
                         <div className="stars">
-                            <span>Ofensiva: {'★'.repeat(Math.min(5, Math.max(0, team['Offensive Stars'] || 0)))}</span>
-                            <span>Defensa: {'★'.repeat(Math.min(5, Math.max(0, team['Deffensive Stars'] || 0)))}</span>
+                            <span>Ofensiva: {renderStars(team['Offensive Stars'])}</span>
+                            <span>Defensa: {renderStars(team['Deffensive Stars'])}</span>
                         </div>
                     </div>
                 </div>
