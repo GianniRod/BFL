@@ -1,0 +1,621 @@
+import { useState, useRef, useEffect } from 'react';
+import './GameSimulator.css';
+
+// ── Probability helpers ──
+const weightedRandom = (options) => {
+    const total = options.reduce((sum, o) => sum + o.weight, 0);
+    let r = Math.random() * total;
+    for (const opt of options) {
+        r -= opt.weight;
+        if (r <= 0) return opt.value;
+    }
+    return options[options.length - 1].value;
+};
+
+const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+const chance = (pct) => Math.random() * 100 < pct;
+
+// ── Simulation engine ──
+function simulateGame(localTeamName, visitanteTeamName, isLocalHome) {
+    const log = [];
+    let localScore = 0;
+    let visitanteScore = 0;
+    const gameClock = [900, 900, 900, 900];
+    let quarter = 0;
+    let broadcastTime = 0;
+    let totalPlays = 0;
+    let driveCount = 0;
+
+    const stats = {
+        local: { totalYards: 0, passingYards: 0, rushingYards: 0, turnovers: 0, firstDowns: 0, timeOfPossession: 0, drives: 0 },
+        visitante: { totalYards: 0, passingYards: 0, rushingYards: 0, turnovers: 0, firstDowns: 0, timeOfPossession: 0, drives: 0 },
+    };
+
+    const homeAdv = isLocalHome ? 0.03 : -0.03;
+    let twoMinQ2 = false;
+    let twoMinQ4 = false;
+
+    let possession = chance(50) ? 'local' : 'visitante';
+    let yardLine = 25;
+    let down = 1;
+    let yardsToGo = 10;
+    let drivePlays = 0;
+    let driveOver = false;
+
+    const safeQ = () => Math.min(quarter, 3);
+
+    const push = (entry) => {
+        log.push({
+            ...entry,
+            quarter: safeQ() + 1,
+            gameClock: gameClock[safeQ()] || 0,
+            localScore,
+            visitanteScore,
+        });
+    };
+
+    const flipPoss = (yl) => {
+        possession = possession === 'local' ? 'visitante' : 'local';
+        yardLine = yl != null ? yl : 25;
+        down = 1;
+        yardsToGo = 10;
+        drivePlays = 0;
+        driveCount++;
+        stats[possession].drives++;
+        driveOver = false;
+    };
+
+    const tn = (t) => t === 'local' ? localTeamName : visitanteTeamName;
+    const def = (t) => t === 'local' ? 'visitante' : 'local';
+
+    const tick = (s) => {
+        gameClock[safeQ()] = Math.max(0, (gameClock[safeQ()] || 0) - s);
+        stats[possession].timeOfPossession += s;
+    };
+
+    const is2min = () => (gameClock[safeQ()] || 0) <= 120 && (quarter === 1 || quarter === 3);
+
+    const pickPlay = () => {
+        if (is2min()) {
+            return weightedRandom([
+                { value: 'short_pass', weight: 50 },
+                { value: 'deep_pass', weight: 35 },
+                { value: 'run', weight: 10 },
+                { value: 'spike', weight: 5 },
+            ]);
+        }
+        return weightedRandom([
+            { value: 'run', weight: 42 },
+            { value: 'short_pass', weight: 33 },
+            { value: 'deep_pass', weight: 18 },
+            { value: 'screen', weight: 4 },
+            { value: 'trick', weight: 1 },
+            { value: 'sack', weight: 2 },
+        ]);
+    };
+
+    const doRun = () => {
+        if (chance(1.5)) return { yards: 0, fumble: true, desc: '¡FUMBLE! Balón suelto recuperado por la defensa' };
+        const adj = (possession === 'local' ? homeAdv : -homeAdv) * 100;
+        const y = weightedRandom([
+            { value: randomBetween(-2, -1), weight: 8 },
+            { value: randomBetween(0, 2), weight: 30 },
+            { value: randomBetween(3, 5), weight: Math.max(1, 35 + adj) },
+            { value: randomBetween(6, 10), weight: 20 },
+            { value: randomBetween(11, 20), weight: 6 },
+            { value: randomBetween(21, 40), weight: 1 },
+        ]);
+        return { yards: y, desc: `Acarreo por ${y} yardas` };
+    };
+
+    const doShort = () => {
+        const adj = (possession === 'local' ? homeAdv : -homeAdv) * 100;
+        const r = weightedRandom([
+            { value: 'inc', weight: 35 },
+            { value: 's', weight: Math.max(1, 40 + adj) },
+            { value: 'm', weight: 18 },
+            { value: 'l', weight: 5 },
+            { value: 'int', weight: 2 },
+        ]);
+        if (r === 'inc') return { yards: 0, incomplete: true, desc: 'Pase incompleto' };
+        if (r === 'int') return { yards: 0, interception: true, desc: '¡INTERCEPCIÓN!' };
+        const y = r === 's' ? randomBetween(3, 7) : r === 'm' ? randomBetween(8, 15) : randomBetween(15, 30);
+        const prefix = r === 'l' ? 'Gran pase completado' : 'Pase completado';
+        return { yards: y, desc: `${prefix} por ${y} yardas` };
+    };
+
+    const doDeep = () => {
+        if (chance(0.5)) return { yards: 0, interception: true, pickSix: true, desc: '¡PICK SIX! ¡Intercepción devuelta para touchdown!' };
+        const adj = (possession === 'local' ? homeAdv : -homeAdv) * 100;
+        const r = weightedRandom([
+            { value: 'inc', weight: 55 },
+            { value: 'm', weight: Math.max(1, 25 + adj) },
+            { value: 'l', weight: 12 },
+            { value: 'd', weight: 5 },
+            { value: 'int', weight: 3 },
+        ]);
+        if (r === 'inc') return { yards: 0, incomplete: true, desc: 'Pase profundo incompleto' };
+        if (r === 'int') return { yards: 0, interception: true, desc: '¡INTERCEPCIÓN en pase profundo!' };
+        const y = r === 'm' ? randomBetween(15, 25) : r === 'l' ? randomBetween(25, 40) : randomBetween(40, 70);
+        const prefix = r === 'd' ? '¡BOMBA! Pase profundo' : r === 'l' ? '¡Gran pase profundo' : 'Pase profundo completado';
+        return { yards: y, desc: `${prefix} por ${y} yardas${r === 'l' ? '!' : ''}` };
+    };
+
+    const doScreen = () => {
+        const y = weightedRandom([
+            { value: randomBetween(-2, 0), weight: 15 },
+            { value: randomBetween(1, 5), weight: 40 },
+            { value: randomBetween(6, 12), weight: 30 },
+            { value: randomBetween(13, 25), weight: 15 },
+        ]);
+        return { yards: y, desc: `Screen pass por ${y} yardas` };
+    };
+
+    const doTrick = () => {
+        if (chance(40)) { const y = randomBetween(15, 50); return { yards: y, desc: `¡Jugada engaño exitosa por ${y} yardas!` }; }
+        return { yards: randomBetween(-5, 0), desc: 'Jugada engaño fallida' };
+    };
+
+    const doSack = () => {
+        const y = randomBetween(-8, -3);
+        return { yards: y, desc: `¡SACK! Pérdida de ${Math.abs(y)} yardas` };
+    };
+
+    const exec = (pt) => {
+        switch (pt) {
+            case 'run': return doRun();
+            case 'short_pass': return doShort();
+            case 'deep_pass': return doDeep();
+            case 'screen': return doScreen();
+            case 'trick': return doTrick();
+            case 'sack': return doSack();
+            case 'spike': return { yards: 0, incomplete: true, desc: 'Spike – reloj detenido' };
+            default: return { yards: 0, desc: 'Jugada' };
+        }
+    };
+
+    const decide4th = () => {
+        const dist = 100 - yardLine;
+        const fgDist = dist + 17;
+        if (fgDist <= 60) return 'fg';
+        if (yardsToGo <= 2 && yardLine >= 55 && chance(30)) return 'go';
+        if (yardLine < 60 && yardsToGo > 3) return chance(85) ? 'punt' : 'go';
+        if (yardLine >= 60 && yardsToGo <= 4 && chance(50)) return 'go';
+        return 'punt';
+    };
+
+    // ── MAIN LOOP ──
+    push({ desc: `${tn(possession)} recibe el kickoff`, eventType: 'kickoff' });
+    stats[possession].drives++;
+    broadcastTime += 45;
+
+    let iter = 0;
+    while (quarter < 4 && iter < 800) {
+        iter++;
+
+        // Two-minute warnings
+        if (quarter === 1 && !twoMinQ2 && (gameClock[1] || 0) <= 120) {
+            twoMinQ2 = true;
+            push({ desc: 'Two Minute Warning – Segundo Cuarto', eventType: 'two_min' });
+            broadcastTime += 150;
+        }
+        if (quarter === 3 && !twoMinQ4 && (gameClock[3] || 0) <= 120) {
+            twoMinQ4 = true;
+            push({ desc: 'Two Minute Warning – Cuarto Cuarto', eventType: 'two_min' });
+            broadcastTime += 150;
+        }
+
+        // Quarter end
+        if ((gameClock[safeQ()] || 0) <= 0) {
+            if (quarter === 1) {
+                push({ desc: 'Medio Tiempo', eventType: 'halftime' });
+                broadcastTime += 720;
+                quarter = 2;
+                flipPoss(25);
+                push({ desc: `${tn(possession)} recibe el kickoff de la segunda mitad`, eventType: 'kickoff' });
+                broadcastTime += 45;
+                quarter = 2;
+                continue;
+            }
+            push({ desc: `Fin del ${quarter + 1}° cuarto`, eventType: 'quarter_end' });
+            quarter++;
+            if (quarter >= 4) break;
+            continue;
+        }
+
+        // Turnover on downs
+        if (down > 4) {
+            push({ desc: 'Turnover on downs', eventType: 'turnover', down: 4, yardsToGo, yardLine });
+            const nyl = Math.max(1, Math.min(99, 100 - yardLine));
+            if (chance(80)) { push({ desc: 'Pausa comercial', eventType: 'commercial' }); broadcastTime += randomBetween(120, 150); }
+            flipPoss(nyl);
+            continue;
+        }
+
+        // 4th down decision
+        if (down === 4 && !driveOver) {
+            const dec = decide4th();
+
+            if (dec === 'punt') {
+                const py = randomBetween(35, 55);
+                const ry = randomBetween(0, 15);
+                push({ desc: `Punt de ${py} yardas. Retorno de ${ry} yardas.`, eventType: 'punt', down, yardsToGo, yardLine });
+                const nyl = Math.max(1, Math.min(99, 100 - (yardLine + py) + ry));
+                tick(randomBetween(5, 8));
+                broadcastTime += 70;
+                totalPlays++;
+                if (chance(80)) { push({ desc: 'Pausa comercial', eventType: 'commercial' }); broadcastTime += randomBetween(120, 150); }
+                flipPoss(nyl);
+                continue;
+            }
+
+            if (dec === 'fg') {
+                const fgDist = (100 - yardLine) + 17;
+                let pct = fgDist < 30 ? 95 : fgDist <= 40 ? 90 : fgDist <= 50 ? 75 : fgDist <= 60 ? 55 : 20;
+                totalPlays++;
+                if (chance(pct)) {
+                    if (possession === 'local') localScore += 3; else visitanteScore += 3;
+                    push({ desc: `¡FIELD GOAL! Gol de campo de ${fgDist} yardas. ¡Es bueno!`, eventType: 'field_goal', down, yardsToGo, yardLine });
+                } else {
+                    push({ desc: `Field goal fallido de ${fgDist} yardas.`, eventType: 'missed_fg', down, yardsToGo, yardLine });
+                }
+                tick(randomBetween(4, 7));
+                broadcastTime += 75;
+                push({ desc: 'Pausa comercial', eventType: 'commercial' });
+                broadcastTime += randomBetween(120, 150);
+                flipPoss(25);
+                continue;
+            }
+            // 'go' → fall through to normal play
+        }
+
+        // Kickoff after scoring
+        if (driveOver) {
+            driveOver = false;
+            flipPoss(25);
+            push({ desc: `${tn(possession)} recibe el kickoff`, eventType: 'kickoff' });
+            broadcastTime += 45;
+            tick(randomBetween(5, 8));
+            continue;
+        }
+
+        // ── Normal play ──
+        const pt = pickPlay();
+        const res = exec(pt);
+        totalPlays++;
+        drivePlays++;
+
+        // Turnovers
+        if (res.fumble || res.interception) {
+            stats[def(possession)].turnovers++;
+            push({ desc: res.desc, eventType: 'turnover', down, yardsToGo, yardLine });
+
+            if (res.pickSix) {
+                const dt = def(possession);
+                if (dt === 'local') localScore += 7; else visitanteScore += 7;
+                push({ desc: `¡PICK SIX TOUCHDOWN para ${tn(dt)}!`, eventType: 'touchdown' });
+                broadcastTime += 90;
+                push({ desc: 'Pausa comercial', eventType: 'commercial' });
+                broadcastTime += randomBetween(120, 150);
+                driveOver = true;
+            } else {
+                tick(randomBetween(5, 10));
+                broadcastTime += 60;
+                if (chance(80)) { push({ desc: 'Pausa comercial', eventType: 'commercial' }); broadcastTime += randomBetween(120, 150); }
+                flipPoss(Math.max(1, Math.min(99, 100 - yardLine)));
+            }
+            continue;
+        }
+
+        // Advance
+        if (!res.incomplete) {
+            yardLine += res.yards;
+            if (pt === 'run') stats[possession].rushingYards += res.yards;
+            else stats[possession].passingYards += res.yards;
+            stats[possession].totalYards += res.yards;
+        }
+
+        // Safety
+        if (yardLine <= 0) {
+            const dt = def(possession);
+            if (dt === 'local') localScore += 2; else visitanteScore += 2;
+            push({ desc: `¡SAFETY! 2 puntos para ${tn(dt)}`, eventType: 'safety', down, yardsToGo, yardLine: 0 });
+            broadcastTime += 60;
+            flipPoss(35);
+            continue;
+        }
+
+        // Touchdown
+        if (yardLine >= 100) {
+            if (possession === 'local') localScore += 7; else visitanteScore += 7;
+            push({ desc: res.desc, eventType: 'play', down, yardsToGo, yardLine: 100 });
+            push({ desc: `🏈 ¡TOUCHDOWN ${tn(possession)}!`, eventType: 'touchdown' });
+            tick(randomBetween(5, 10));
+            broadcastTime += 90;
+            push({ desc: 'Pausa comercial', eventType: 'commercial' });
+            broadcastTime += randomBetween(120, 150);
+            driveOver = true;
+            continue;
+        }
+
+        // Clock consumption
+        let clk;
+        if (res.incomplete || pt === 'spike') { clk = randomBetween(3, 6); broadcastTime += 25; }
+        else if (pt === 'run') { clk = randomBetween(25, 40); broadcastTime += 40; }
+        else if (pt === 'sack') { clk = randomBetween(15, 30); broadcastTime += 35; }
+        else { clk = randomBetween(15, 35); broadcastTime += 35; }
+
+        if (is2min()) clk = Math.min(clk, randomBetween(10, 15));
+        tick(clk);
+
+        // First down check
+        yardsToGo -= (res.incomplete ? 0 : res.yards);
+        if (yardsToGo <= 0 && !res.incomplete) {
+            stats[possession].firstDowns++;
+            down = 1;
+            yardsToGo = Math.min(10, 100 - yardLine);
+            broadcastTime += 10;
+            push({ desc: `${res.desc} – PRIMER DOWN`, eventType: 'first_down', down: 1, yardsToGo, yardLine });
+        } else {
+            down++;
+            push({ desc: res.desc, eventType: 'play', down: down - 1, yardsToGo: yardsToGo + (res.incomplete ? 0 : res.yards), yardLine });
+        }
+
+        if (totalPlays >= 145) {
+            while (quarter < 4) { gameClock[quarter] = 0; quarter++; }
+            break;
+        }
+    }
+
+    push({ desc: '¡Fin del partido!', eventType: 'game_end' });
+
+    return { log, localScore, visitanteScore, stats, totalPlays, driveCount, broadcastTime };
+}
+
+// ── Format helpers ──
+const fmtClock = (s) => {
+    if (s == null || s < 0) s = 0;
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
+const fmtTime = (s) => {
+    if (s == null) return '0m';
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+};
+
+// ── Event styling ──
+const EVT_CLASS = {
+    touchdown: 'event-td', field_goal: 'event-fg', turnover: 'event-turnover',
+    punt: 'event-punt', safety: 'event-safety', first_down: 'event-first-down',
+    two_min: 'event-warning', halftime: 'event-halftime', quarter_end: 'event-quarter',
+    kickoff: 'event-kickoff', commercial: 'event-commercial', game_end: 'event-game-end',
+    missed_fg: 'event-missed',
+};
+
+const EVT_ICON = {
+    touchdown: '🏈', field_goal: '🥅', turnover: '💥', punt: '👟', safety: '⚠️',
+    first_down: '🔵', two_min: '⏰', halftime: '🎵', quarter_end: '🔔',
+    kickoff: '🏈', commercial: '📺', game_end: '🏆', missed_fg: '✖️',
+};
+
+// ── Component ──
+function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose }) {
+    const [phase, setPhase] = useState('idle');
+    const [visiblePlays, setVisiblePlays] = useState([]);
+    const [speed, setSpeed] = useState(1);
+
+    const gameResultRef = useRef(null);
+    const logRef = useRef(null);
+    const timerRef = useRef(null);
+    const indexRef = useRef(0);
+    const mountedRef = useRef(true);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, []);
+
+    // Auto-scroll
+    useEffect(() => {
+        if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+    }, [visiblePlays]);
+
+    const stopTimer = () => {
+        if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    };
+
+    const scheduleNext = (result, spd) => {
+        const delay = Math.max(10, 80 / spd);
+        const step = () => {
+            if (!mountedRef.current) return;
+            const idx = indexRef.current;
+            if (idx >= result.log.length) {
+                timerRef.current = null;
+                setPhase('finished');
+                return;
+            }
+            setVisiblePlays(result.log.slice(0, idx + 1));
+            indexRef.current = idx + 1;
+            timerRef.current = setTimeout(step, delay);
+        };
+        timerRef.current = setTimeout(step, delay);
+    };
+
+    const startSimulation = () => {
+        const result = simulateGame(
+            localTeam?.['Team Name'] || 'Local',
+            visitanteTeam?.['Team Name'] || 'Visitante',
+            isLocalHome
+        );
+        gameResultRef.current = result;
+        indexRef.current = 0;
+        setVisiblePlays([]);
+        setPhase('simulating');
+        scheduleNext(result, speed);
+    };
+
+    const skipToEnd = () => {
+        stopTimer();
+        const result = gameResultRef.current;
+        if (result) {
+            setVisiblePlays([...result.log]);
+            indexRef.current = result.log.length;
+            setPhase('finished');
+        }
+    };
+
+    const changeSpeed = () => {
+        const newSpd = speed === 1 ? 2 : speed === 2 ? 4 : 1;
+        setSpeed(newSpd);
+        if (phase === 'simulating' && gameResultRef.current) {
+            stopTimer();
+            scheduleNext(gameResultRef.current, newSpd);
+        }
+    };
+
+    const handleSave = () => {
+        const r = gameResultRef.current;
+        if (r && onFinish) onFinish(r.localScore, r.visitanteScore);
+    };
+
+    const last = visiblePlays.length > 0 ? visiblePlays[visiblePlays.length - 1] : null;
+    const localS = last ? last.localScore : 0;
+    const visitS = last ? last.visitanteScore : 0;
+    const curQ = last ? (last.quarter || 1) : 1;
+    const curClk = last ? (last.gameClock ?? 900) : 900;
+    const result = gameResultRef.current;
+
+    return (
+        <div className="sim-overlay" onClick={onClose}>
+            <div className="sim-modal" onClick={(e) => e.stopPropagation()}>
+                <button className="sim-close" onClick={onClose}>✕</button>
+
+                {/* Scoreboard */}
+                <div className="sim-scoreboard">
+                    <div className="sim-team-side sim-team-local">
+                        {localTeam?.['URL PHOTO'] && <img src={localTeam['URL PHOTO']} alt="" className="sim-team-logo" />}
+                        <span className="sim-team-name">{localTeam?.['Team Name'] || 'Local'}</span>
+                        {isLocalHome && <span className="sim-home-badge">LOCAL</span>}
+                    </div>
+                    <div className="sim-score-center">
+                        <div className={`sim-score-num ${phase !== 'idle' ? 'sim-score-active' : ''}`}>
+                            <span className="sim-score-local">{localS}</span>
+                            <span className="sim-score-sep">–</span>
+                            <span className="sim-score-visit">{visitS}</span>
+                        </div>
+                        {phase !== 'idle' && (
+                            <div className="sim-quarter-info">
+                                <span className="sim-quarter">Q{curQ}</span>
+                                <span className="sim-clock">{fmtClock(curClk)}</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className="sim-team-side sim-team-visit">
+                        {visitanteTeam?.['URL PHOTO'] && <img src={visitanteTeam['URL PHOTO']} alt="" className="sim-team-logo" />}
+                        <span className="sim-team-name">{visitanteTeam?.['Team Name'] || 'Visitante'}</span>
+                        {!isLocalHome && <span className="sim-home-badge">LOCAL</span>}
+                    </div>
+                </div>
+
+                {/* Quarter indicators */}
+                {phase !== 'idle' && (
+                    <div className="sim-quarters-bar">
+                        {[1, 2, 3, 4].map(q => (
+                            <div key={q} className={`sim-q-dot ${q <= curQ ? 'active' : ''} ${q === curQ ? 'current' : ''}`}>Q{q}</div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Idle */}
+                {phase === 'idle' && (
+                    <div className="sim-idle-area">
+                        <div className="sim-matchup-vs">VS</div>
+                        <button className="sim-start-btn" onClick={startSimulation}>🏈 Simular Partido</button>
+                    </div>
+                )}
+
+                {/* Play-by-play */}
+                {phase !== 'idle' && (
+                    <div className="sim-log-container">
+                        <div className="sim-log-header">
+                            <span>Jugada a Jugada</span>
+                            <div className="sim-log-controls">
+                                {phase === 'simulating' && (
+                                    <>
+                                        <button className="sim-speed-btn" onClick={changeSpeed}>{speed}x</button>
+                                        <button className="sim-skip-btn" onClick={skipToEnd}>⏭ Saltar</button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                        <div className="sim-log" ref={logRef}>
+                            {visiblePlays.map((play, i) => (
+                                <div key={i} className={`sim-play-entry ${EVT_CLASS[play.eventType] || ''} sim-play-fadein`}>
+                                    <span className="sim-play-icon">{EVT_ICON[play.eventType] || '▸'}</span>
+                                    <div className="sim-play-content">
+                                        <div className="sim-play-desc">{play.desc}</div>
+                                        {play.down != null && (
+                                            <div className="sim-play-meta">{play.down}° down &amp; {play.yardsToGo} | Yd {play.yardLine}</div>
+                                        )}
+                                    </div>
+                                    <div className="sim-play-clock">Q{play.quarter} {fmtClock(play.gameClock)}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Stats */}
+                {phase === 'finished' && result && (
+                    <div className="sim-stats-panel">
+                        <h4 className="sim-stats-title">Estadísticas del Partido</h4>
+                        <div className="sim-stats-grid">
+                            <StatRow label="Yardas totales" local={result.stats.local.totalYards} visit={result.stats.visitante.totalYards} />
+                            <StatRow label="Yardas por pase" local={result.stats.local.passingYards} visit={result.stats.visitante.passingYards} />
+                            <StatRow label="Yardas por carrera" local={result.stats.local.rushingYards} visit={result.stats.visitante.rushingYards} />
+                            <StatRow label="Primeros downs" local={result.stats.local.firstDowns} visit={result.stats.visitante.firstDowns} />
+                            <StatRow label="Turnovers" local={result.stats.local.turnovers} visit={result.stats.visitante.turnovers} neg />
+                            <StatRow label="T. de posesión" local={fmtTime(result.stats.local.timeOfPossession)} visit={fmtTime(result.stats.visitante.timeOfPossession)} text />
+                        </div>
+                        <div className="sim-game-info">
+                            <span>Total jugadas: {result.totalPlays}</span>
+                            <span>Drives: {result.driveCount}</span>
+                            <span>Duración TV: {fmtTime(result.broadcastTime)}</span>
+                        </div>
+                        <button className="sim-save-btn" onClick={handleSave}>✅ Guardar Resultado</button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function StatRow({ label, local, visit, neg = false, text = false }) {
+    const ln = text ? 0 : Number(local);
+    const vn = text ? 0 : Number(visit);
+    const mx = text ? 1 : Math.max(Math.abs(ln), Math.abs(vn), 1);
+
+    return (
+        <div className="sim-stat-row">
+            <span className={`sim-stat-val ${!text && !neg && ln > vn ? 'sim-stat-lead' : ''} ${neg && ln > vn ? 'sim-stat-bad' : ''}`}>{local}</span>
+            <div className="sim-stat-bar-area">
+                {!text && (
+                    <div className="sim-stat-bars">
+                        <div className="sim-stat-bar sim-bar-local" style={{ width: `${(Math.abs(ln) / mx) * 50}%` }} />
+                        <div className="sim-stat-bar sim-bar-visit" style={{ width: `${(Math.abs(vn) / mx) * 50}%` }} />
+                    </div>
+                )}
+                <span className="sim-stat-label">{label}</span>
+            </div>
+            <span className={`sim-stat-val ${!text && !neg && vn > ln ? 'sim-stat-lead' : ''} ${neg && vn > ln ? 'sim-stat-bad' : ''}`}>{visit}</span>
+        </div>
+    );
+}
+
+export default GameSimulator;
