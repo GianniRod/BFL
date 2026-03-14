@@ -80,14 +80,22 @@ function TeamsList() {
         const val = Math.min(5, Math.max(0, parseFloat(rating) || 0));
         const full = Math.floor(val);
         const hasHalf = val % 1 >= 0.5;
-        const empty = 5 - full - (hasHalf ? 1 : 0);
-        return (
-            <>
-                {'★'.repeat(full)}
-                {hasHalf && <span className="half-star">★</span>}
-                {'☆'.repeat(empty)}
-            </>
-        );
+        const stars = [];
+        for (let i = 0; i < 5; i++) {
+            if (i < full) {
+                stars.push(<span key={i} className="star-icon full">★</span>);
+            } else if (i === full && hasHalf) {
+                stars.push(
+                    <span key={i} className="star-icon half-wrap">
+                        <span className="star-empty">☆</span>
+                        <span className="star-half-fill">★</span>
+                    </span>
+                );
+            } else {
+                stars.push(<span key={i} className="star-icon empty">☆</span>);
+            }
+        }
+        return stars;
     };
 
     const StarEditor = ({ teamId, field, value }) => {
