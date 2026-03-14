@@ -17,7 +17,7 @@ const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) 
 const chance = (pct) => Math.random() * 100 < pct;
 
 // ── Simulation engine ──
-function simulateGame(localTeamName, visitanteTeamName, isLocalHome) {
+function simulateGame(localTeamName, visitanteTeamName, isLocalHome, teamRatings) {
     const log = [];
     let localScore = 0;
     let visitanteScore = 0;
@@ -32,7 +32,36 @@ function simulateGame(localTeamName, visitanteTeamName, isLocalHome) {
         visitante: { totalYards: 0, passingYards: 0, rushingYards: 0, turnovers: 0, firstDowns: 0, timeOfPossession: 0, drives: 0 },
     };
 
-    const homeAdv = isLocalHome ? 0.03 : -0.03;
+    // ── VENTAJA system: offense stars vs opponent defense stars ──
+    const localOff = parseFloat(teamRatings?.localOff) || 3;
+    const localDef = parseFloat(teamRatings?.localDef) || 3;
+    const visitOff = parseFloat(teamRatings?.visitOff) || 3;
+    const visitDef = parseFloat(teamRatings?.visitDef) || 3;
+
+    // Calculate advantage for whoever has the ball
+    // VENTAJA = Offensive stars of ball carrier - Defensive stars of opponent
+    const getVentaja = () => {
+        const homeBonus = isLocalHome ? 0.25 : -0.25; // small home field bonus
+        if (possession === 'local') return (localOff - visitDef) + homeBonus;
+        return (visitOff - localDef) - homeBonus;
+    };
+
+    // +3% per point of advantage
+    const getAdvPct = () => getVentaja() * 3;
+
+    // Yard multiplier: from 0.80 (-3) to 1.20 (+3), linear
+    const getYardMult = () => {
+        const v = Math.max(-3, Math.min(3, getVentaja()));
+        // -3→0.80, 0→1.00, +3→1.20
+        return 1 + (v * 0.0667);
+    };
+
+    // Turnover adjustment: base% + modifier
+    const getTurnoverAdj = () => {
+        const v = getVentaja();
+        // +2 or more → -1% turnovers, -2 or less → +1% turnovers
+        return -v * 0.5; // per point of advantage
+    };
     let twoMinQ2 = false;
     let twoMinQ4 = false;
 
@@ -96,69 +125,85 @@ function simulateGame(localTeamName, visitanteTeamName, isLocalHome) {
     };
 
     const doRun = () => {
-        if (chance(1.5)) return { yards: 0, fumble: true, desc: '¡FUMBLE! Balón suelto recuperado por la defensa' };
-        const adj = (possession === 'local' ? homeAdv : -homeAdv) * 100;
-        const y = weightedRandom([
-            { value: randomBetween(-2, -1), weight: 8 },
+        const fumbleChance = Math.max(0.5, 1.5 + getTurnoverAdj() * 0.3);
+        if (chance(fumbleChance)) return { yards: 0, fumble: true, desc: '¡FUMBLE! Balón suelto recuperado por la defensa' };
+        const adv = getAdvPct();
+        const mult = getYardMult();
+        const y = Math.round(weightedRandom([
+            { value: randomBetween(-2, -1), weight: Math.max(1, 8 - adv) },
             { value: randomBetween(0, 2), weight: 30 },
-            { value: randomBetween(3, 5), weight: Math.max(1, 35 + adj) },
-            { value: randomBetween(6, 10), weight: 20 },
-            { value: randomBetween(11, 20), weight: 6 },
+            { value: randomBetween(3, 5), weight: Math.max(1, 35 + adv) },
+            { value: randomBetween(6, 10), weight: Math.max(1, 20 + adv * 0.5) },
+            { value: randomBetween(11, 20), weight: Math.max(1, 6 + adv * 0.3) },
             { value: randomBetween(21, 40), weight: 1 },
-        ]);
+        ]) * mult);
         return { yards: y, desc: `Acarreo por ${y} yardas` };
     };
 
     const doShort = () => {
-        const adj = (possession === 'local' ? homeAdv : -homeAdv) * 100;
+        const adv = getAdvPct();
+        const mult = getYardMult();
+        const intChance = Math.max(0.5, 2 + getTurnoverAdj() * 0.5);
         const r = weightedRandom([
-            { value: 'inc', weight: 35 },
-            { value: 's', weight: Math.max(1, 40 + adj) },
-            { value: 'm', weight: 18 },
+            { value: 'inc', weight: Math.max(1, 35 - adv) },
+            { value: 's', weight: Math.max(1, 40 + adv) },
+            { value: 'm', weight: Math.max(1, 18 + adv * 0.5) },
             { value: 'l', weight: 5 },
-            { value: 'int', weight: 2 },
+            { value: 'int', weight: Math.max(0.5, intChance) },
         ]);
         if (r === 'inc') return { yards: 0, incomplete: true, desc: 'Pase incompleto' };
         if (r === 'int') return { yards: 0, interception: true, desc: '¡INTERCEPCIÓN!' };
-        const y = r === 's' ? randomBetween(3, 7) : r === 'm' ? randomBetween(8, 15) : randomBetween(15, 30);
+        const rawY = r === 's' ? randomBetween(3, 7) : r === 'm' ? randomBetween(8, 15) : randomBetween(15, 30);
+        const y = Math.round(rawY * mult);
         const prefix = r === 'l' ? 'Gran pase completado' : 'Pase completado';
         return { yards: y, desc: `${prefix} por ${y} yardas` };
     };
 
     const doDeep = () => {
-        if (chance(0.5)) return { yards: 0, interception: true, pickSix: true, desc: '¡PICK SIX! ¡Intercepción devuelta para touchdown!' };
-        const adj = (possession === 'local' ? homeAdv : -homeAdv) * 100;
+        const pickSixChance = Math.max(0.2, 0.5 + getTurnoverAdj() * 0.15);
+        if (chance(pickSixChance)) return { yards: 0, interception: true, pickSix: true, desc: '¡PICK SIX! ¡Intercepción devuelta para touchdown!' };
+        const adv = getAdvPct();
+        const mult = getYardMult();
+        const intChance = Math.max(0.5, 3 + getTurnoverAdj() * 0.5);
         const r = weightedRandom([
-            { value: 'inc', weight: 55 },
-            { value: 'm', weight: Math.max(1, 25 + adj) },
-            { value: 'l', weight: 12 },
-            { value: 'd', weight: 5 },
-            { value: 'int', weight: 3 },
+            { value: 'inc', weight: Math.max(1, 55 - adv) },
+            { value: 'm', weight: Math.max(1, 25 + adv) },
+            { value: 'l', weight: Math.max(1, 12 + adv * 0.3) },
+            { value: 'd', weight: Math.max(1, 5 + adv * 0.2) },
+            { value: 'int', weight: Math.max(0.5, intChance) },
         ]);
         if (r === 'inc') return { yards: 0, incomplete: true, desc: 'Pase profundo incompleto' };
         if (r === 'int') return { yards: 0, interception: true, desc: '¡INTERCEPCIÓN en pase profundo!' };
-        const y = r === 'm' ? randomBetween(15, 25) : r === 'l' ? randomBetween(25, 40) : randomBetween(40, 70);
+        const rawY = r === 'm' ? randomBetween(15, 25) : r === 'l' ? randomBetween(25, 40) : randomBetween(40, 70);
+        const y = Math.round(rawY * mult);
         const prefix = r === 'd' ? '¡BOMBA! Pase profundo' : r === 'l' ? '¡Gran pase profundo' : 'Pase profundo completado';
         return { yards: y, desc: `${prefix} por ${y} yardas${r === 'l' ? '!' : ''}` };
     };
 
     const doScreen = () => {
-        const y = weightedRandom([
+        const mult = getYardMult();
+        const rawY = weightedRandom([
             { value: randomBetween(-2, 0), weight: 15 },
             { value: randomBetween(1, 5), weight: 40 },
             { value: randomBetween(6, 12), weight: 30 },
             { value: randomBetween(13, 25), weight: 15 },
         ]);
+        const y = Math.round(rawY * mult);
         return { yards: y, desc: `Screen pass por ${y} yardas` };
     };
 
     const doTrick = () => {
-        if (chance(40)) { const y = randomBetween(15, 50); return { yards: y, desc: `¡Jugada engaño exitosa por ${y} yardas!` }; }
+        const adv = getAdvPct();
+        if (chance(Math.max(10, 40 + adv))) { const y = randomBetween(15, 50); return { yards: y, desc: `¡Jugada engaño exitosa por ${y} yardas!` }; }
         return { yards: randomBetween(-5, 0), desc: 'Jugada engaño fallida' };
     };
 
     const doSack = () => {
-        const y = randomBetween(-8, -3);
+        const adv = getAdvPct();
+        // Stronger defense → worse sacks
+        const minLoss = Math.round(Math.max(2, 3 - adv * 0.3));
+        const maxLoss = Math.round(Math.max(4, 8 - adv * 0.5));
+        const y = -randomBetween(minLoss, maxLoss);
         return { yards: y, desc: `¡SACK! Pérdida de ${Math.abs(y)} yardas` };
     };
 
@@ -451,7 +496,13 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
         const result = simulateGame(
             localTeam?.['Team Name'] || 'Local',
             visitanteTeam?.['Team Name'] || 'Visitante',
-            isLocalHome
+            isLocalHome,
+            {
+                localOff: localTeam?.['Offensive Stars'] || 3,
+                localDef: localTeam?.['Deffensive Stars'] || 3,
+                visitOff: visitanteTeam?.['Offensive Stars'] || 3,
+                visitDef: visitanteTeam?.['Deffensive Stars'] || 3,
+            }
         );
         gameResultRef.current = result;
         indexRef.current = 0;
