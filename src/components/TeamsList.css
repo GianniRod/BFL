@@ -163,3 +163,44 @@
     text-align: center;
     flex-shrink: 0;
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+    .teams-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 10px;
+        padding: 10px 0;
+    }
+
+    .team-card {
+        padding: 14px;
+    }
+
+    .team-card:hover {
+        transform: none;
+    }
+
+    .team-logo,
+    .placeholder-logo {
+        width: 60px;
+        height: 60px;
+    }
+
+    .team-header h3 {
+        font-size: 1rem;
+    }
+
+    .team-details {
+        font-size: 0.8rem;
+        padding: 8px;
+    }
+
+    .star-row {
+        gap: 4px;
+    }
+
+    .star-label {
+        font-size: 0.75rem;
+        min-width: 50px;
+    }
+}
