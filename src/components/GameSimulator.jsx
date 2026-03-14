@@ -82,7 +82,8 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
             gameClock: gameClock[safeQ()] || 0,
             localScore,
             visitanteScore,
-            broadcastTime
+            broadcastTime,
+            possession
         });
     };
 
@@ -600,7 +601,10 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                 <div className="sim-scoreboard">
                     <div className="sim-team-side sim-team-local">
                         {localTeam?.['URL PHOTO'] && <img src={localTeam['URL PHOTO']} alt="" className="sim-team-logo" />}
-                        <span className="sim-team-name">{localTeam?.['Team Name'] || 'Local'}</span>
+                        <span className="sim-team-name">
+                            {localTeam?.['Team Name'] || 'Local'}
+                            {last?.possession === 'local' && phase !== 'finished' && <span className="possession-icon">🏈</span>}
+                        </span>
                         {isLocalHome && <span className="sim-home-badge">LOCAL</span>}
                     </div>
                     <div className="sim-score-center">
@@ -618,7 +622,10 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                     </div>
                     <div className="sim-team-side sim-team-visit">
                         {visitanteTeam?.['URL PHOTO'] && <img src={visitanteTeam['URL PHOTO']} alt="" className="sim-team-logo" />}
-                        <span className="sim-team-name">{visitanteTeam?.['Team Name'] || 'Visitante'}</span>
+                        <span className="sim-team-name">
+                            {last?.possession === 'visitante' && phase !== 'finished' && <span className="possession-icon">🏈</span>}
+                            {visitanteTeam?.['Team Name'] || 'Visitante'}
+                        </span>
                         {!isLocalHome && <span className="sim-home-badge">LOCAL</span>}
                     </div>
                 </div>
