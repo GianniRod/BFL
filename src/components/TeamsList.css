@@ -71,3 +71,10 @@
     margin-top: 5px;
     color: gold;
 }
+
+.half-star {
+    display: inline-block;
+    overflow: hidden;
+    width: 0.55em;
+    color: gold;
+}
