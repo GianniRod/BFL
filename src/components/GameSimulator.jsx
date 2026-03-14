@@ -584,6 +584,25 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
     };
 
     const last = visiblePlays.length > 0 ? visiblePlays[visiblePlays.length - 1] : null;
+
+    // Calculate dynamic real elapsed time
+    const [realElapsedTime, setRealElapsedTime] = useState(last?.broadcastTime || 0);
+
+    useEffect(() => {
+        if (phase === 'simulating' && liveEngine) {
+            const timer = setInterval(() => {
+                const baseTime = last?.broadcastTime || 0;
+                // Calculate how much real time has passed since the last play tick, multiplied by speed
+                const timeSinceTick = (Date.now() - liveEngine.lastTickTime) / 1000;
+                const interpolatedElapsed = baseTime + (timeSinceTick * liveEngine.speed);
+                setRealElapsedTime(Math.floor(interpolatedElapsed));
+            }, 100);
+            return () => clearInterval(timer);
+        } else {
+            setRealElapsedTime(last?.broadcastTime || 0);
+        }
+    }, [phase, liveEngine, last?.broadcastTime]);
+
     const localS = last ? last.localScore : 0;
     const visitS = last ? last.visitanteScore : 0;
     const curQ = last ? (last.quarter || 1) : 1;
@@ -603,9 +622,15 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
         }
 
         const targetSeconds = (targetDate.getTime() - baseDate.getTime()) / 1000;
-        if (targetSeconds > 0 && onSimulateUntil) {
+        if (targetSeconds > realElapsedTime && onSimulateUntil) {
             onSimulateUntil(targetSeconds);
         }
+    };
+
+    const getMinTime = () => {
+        if (!matchDateTime) return '';
+        const minDate = new Date(new Date(matchDateTime).getTime() + (realElapsedTime * 1000));
+        return `${String(minDate.getHours()).padStart(2, '0')}:${String(minDate.getMinutes()).padStart(2, '0')}`;
     };
 
     const fmtElapsed = (secs) => {
@@ -705,7 +730,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                                 {phase === 'simulating' && (
                                     <>
                                         <div className="sim-real-time">
-                                            <span>⏱️ T. Real: {fmtElapsed(last?.broadcastTime || 0)}</span>
+                                            <span>⏱️ T. Real: {fmtElapsed(realElapsedTime)}</span>
                                         </div>
                                         {matchDateTime && (
                                             <div className="sim-until-control">
@@ -713,6 +738,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                                                     type="time"
                                                     className="sim-until-input"
                                                     value={untilTime}
+                                                    min={getMinTime()}
                                                     onChange={e => setUntilTime(e.target.value)}
                                                 />
                                                 <button className="sim-until-btn" onClick={handleSimulateUntilClick}>Simular hasta</button>
