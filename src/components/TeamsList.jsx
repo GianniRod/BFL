@@ -68,6 +68,8 @@ function TeamsList() {
     }
 
     const updateStars = async (teamId, field, newVal) => {
+        // We save the actual decimal value (e.g. 4.5) to the DB from the UI.
+        // It's only manually entered DB integers (e.g. 45) that get divided by 10 on read.
         const clamped = Math.min(5, Math.max(0, newVal));
         try {
             await updateDoc(doc(db, 'teams', teamId), { [field]: clamped });
@@ -76,8 +78,13 @@ function TeamsList() {
         }
     };
 
+    const parseStarValue = (v) => {
+        const num = parseFloat(v) || 0;
+        return num > 5 ? num / 10 : num;
+    };
+
     const renderStars = (rating) => {
-        const val = Math.min(5, Math.max(0, parseFloat(rating) || 0));
+        const val = Math.min(5, Math.max(0, parseStarValue(rating)));
         const full = Math.floor(val);
         const hasHalf = val % 1 >= 0.5;
         const stars = [];
@@ -99,7 +106,7 @@ function TeamsList() {
     };
 
     const StarEditor = ({ teamId, field, value }) => {
-        const val = parseFloat(value) || 0;
+        const val = parseStarValue(value);
         return (
             <div className="star-editor">
                 <button className="star-adj-btn" onClick={() => updateStars(teamId, field, val - 0.5)}>−</button>
