@@ -1,27 +1,1182 @@
-.app-header {
+.liga-container {
+    padding: 20px;
+}
+
+.liga-title {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.year-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.year-selector label {
+    font-weight: bold;
+}
+
+.year-selector select {
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 8px;
+}
+
+.config-btn {
+    background: #333;
+    border: 1px solid #555;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.config-btn:hover {
+    background: #444;
+    border-color: #777;
+}
+
+.config-panel {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.config-panel h3 {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.teams-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.team-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #222;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.team-checkbox:hover {
+    background: #333;
+}
+
+.team-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #d4af37;
+}
+
+.no-teams {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+}
+
+.standings-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.standings-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #0d0d0d;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.standings-table th,
+.standings-table td {
+    padding: 12px 8px;
+    text-align: center;
+    border-bottom: 1px solid #222;
+}
+
+.standings-table th {
+    background: #1a1a1a;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.standings-table tbody tr {
+    transition: background 0.3s;
+}
+
+.standings-table tbody tr:hover {
+    background: #1a1a1a;
+}
+
+.standings-table tbody tr.top-three {
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.standings-table .position {
+    font-weight: bold;
+    color: #d4af37;
+    position: relative;
+}
+
+.standings-table .team-cell {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.standings-table .mini-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.standings-table .pct {
+    font-weight: bold;
+    color: #d4af37;
+}
+
+.last-results {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.result-dot {
+    font-size: 1.2rem;
+}
+
+.result-dot.win {
+    color: #4caf50;
+}
+
+.result-dot.loss {
+    color: #f44336;
+}
+
+.standings-table tbody tr.playoff {
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.edit-standings {
+    margin-top: 30px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.edit-standings h4 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.stats-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.team-stats-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    padding: 10px;
+    background: #222;
+    border-radius: 8px;
+}
+
+.team-stats-row .team-name {
+    min-width: 150px;
+    font-weight: bold;
+}
+
+.stats-inputs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.stats-inputs label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.stats-inputs input {
+    width: 50px;
+    padding: 5px;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.results-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.results-buttons button {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.win-btn {
+    background: #1b5e20;
+    border: 1px solid #4caf50;
+    color: white;
+}
+
+.win-btn:hover {
+    background: #2e7d32;
+}
+
+.loss-btn {
+    background: #b71c1c;
+    border: 1px solid #f44336;
+    color: white;
+}
+
+.loss-btn:hover {
+    background: #c62828;
+}
+
+.clear-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #aaa;
+}
+
+.clear-btn:hover {
+    background: #444;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+}
+
+/* Fechas Section */
+.fechas-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid #333;
+}
+
+.fechas-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 40px;
-    background-color: #000;
+    margin-bottom: 20px;
+}
+
+.fechas-header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.fechas-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.add-fecha-btn {
+    background: #d4af37;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.add-fecha-btn:hover {
+    background: #e5c44a;
+}
+
+.no-fechas {
+    text-align: center;
+    color: #888;
+    padding: 30px;
+}
+
+/* Carousel Navigation */
+.fechas-carousel {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.carousel-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 16px 24px;
+    background: linear-gradient(180deg, #262a33 0%, #1a1d24 100%);
+    border-bottom: 1px solid #2a2f3a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-arrow {
+    background: transparent;
+    border: none;
+    color: #d4af37;
+    width: 40px;
+    height: 40px;
+    font-size: 2.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    line-height: 1;
+}
+
+.carousel-arrow:hover:not(:disabled) {
+    color: #e5c44a;
+    transform: scale(1.2);
+}
+
+.carousel-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.fecha-selector {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.fecha-selector:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(212, 175, 55, 0.3);
+}
+
+.fecha-selector .fecha-nombre-input {
+    font-weight: bold;
+    font-size: 1.3rem;
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    color: white;
+    text-align: center;
+    min-width: 150px;
+    cursor: pointer;
+}
+
+.fecha-selector .fecha-nombre-input:focus {
+    outline: none;
+    background: #333;
+    border-radius: 6px;
+}
+
+.dropdown-arrow {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.fecha-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    min-width: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 100;
+    margin-top: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.fecha-dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background 0.2s;
     border-bottom: 1px solid #333;
 }
 
-.logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    letter-spacing: 2px;
+.fecha-dropdown-item:last-child {
+    border-bottom: none;
 }
 
-nav a {
-    margin-left: 20px;
-    text-decoration: none;
+.fecha-dropdown-item:hover {
+    background: #333;
+}
+
+.fecha-dropdown-item.active {
+    background: #d4af37;
+    color: #000;
+}
+
+.fecha-dropdown-item.active .partidos-badge {
+    background: #000;
+    color: #d4af37;
+}
+
+.partidos-badge {
+    background: #444;
     color: #888;
-    font-weight: 500;
-    transition: color 0.3s;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
 }
 
-nav a:hover,
-nav a.active {
-    color: #fff;
+
+
+/* Fecha Content */
+.fecha-content {
+    padding: 20px;
+}
+
+.fecha-card {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.fecha-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.fecha-header-row:hover {
+    background: #222;
+}
+
+.fecha-nombre {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #d4af37;
+}
+
+.fecha-nombre-input {
+    font-weight: bold;
+    font-size: 1.1rem;
+    background: #222;
+    border: 1px solid #444;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #d4af37;
+    width: 200px;
+}
+
+.fecha-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.partidos-count {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.expand-icon {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.remove-fecha-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.remove-fecha-btn:hover {
+    background: rgba(244, 67, 54, 0.1);
+    color: #ef5350;
+    transform: scale(1.1);
+}
+
+.fecha-partidos {
+    border-top: 1px solid #333;
+    padding: 15px 20px;
+    background: #0d0d0d;
+}
+
+.no-partidos {
+    text-align: center;
+    color: #666;
+    padding: 15px;
+    margin: 0;
+}
+
+.partido-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.partido-team {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.partido-team.local {
+    justify-content: flex-start;
+}
+
+.partido-team.visitante {
+    justify-content: flex-end;
+}
+
+.partido-team span {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.partido-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.partido-score {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.score-input {
+    width: 45px;
+    padding: 8px;
+    text-align: center;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.score-separator {
+    color: #888;
+    font-weight: bold;
+}
+
+.score-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #d4af37;
+    min-width: 60px;
+    text-align: center;
+}
+
+.live-text-badge {
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.possession-icon {
+    font-size: 0.95rem;
+    margin: 0 6px;
+    vertical-align: middle;
+}
+
+.remove-partido-btn {
+    background: #b71c1c;
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.remove-partido-btn:hover {
+    background: #c62828;
+}
+
+.add-partido-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #333;
+    flex-wrap: wrap;
+}
+
+.add-partido-form select {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.vs-text {
+    color: #888;
+    font-weight: bold;
+}
+
+.add-partido-btn {
+    background: #1b5e20;
+    border: 1px solid #4caf50;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.add-partido-btn:hover {
+    background: #2e7d32;
+}
+
+/* Position Label Bar */
+.position-label-bar {
+    position: absolute;
+    left: 0;
+    top: 2px;
+    bottom: 2px;
+    width: 4px;
+    border-radius: 2px;
+}
+
+/* Labels Legend */
+.labels-legend {
+    display: flex;
+    gap: 20px;
+    padding: 12px 16px;
+    background: #1a1a1a;
+    border-radius: 0 0 12px 12px;
+    border: 1px solid #333;
+    border-top: none;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.legend-text {
+    font-size: 0.85rem;
+    color: #bbb;
+}
+
+/* Labels Config */
+.labels-config {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #333;
+}
+
+.labels-config h4 {
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.labels-config-desc {
+    text-align: center;
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+}
+
+.label-config-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #222;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.label-color-picker {
+    width: 40px;
+    height: 36px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+    padding: 0;
+}
+
+.label-color-picker::-webkit-color-swatch-wrapper {
+    padding: 2px;
+}
+
+.label-color-picker::-webkit-color-swatch {
+    border: 1px solid #555;
+    border-radius: 4px;
+}
+
+.label-name-input {
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 12px;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.label-pos-input {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.label-pos-input input {
+    width: 50px;
+    padding: 6px;
+    text-align: center;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.remove-label-btn {
+    background: transparent;
+    border: none;
+    color: #f44336;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    opacity: 0.7;
+    transition: all 0.3s;
+}
+
+.remove-label-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.add-label-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #aaa;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    transition: all 0.3s;
+}
+
+.add-label-btn:hover {
+    background: #444;
+    color: white;
+}
+
+/* Generate Calendar Button */
+.generate-calendar-btn {
+    background: linear-gradient(135deg, #1565c0, #1e88e5);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.generate-calendar-btn:hover {
+    background: linear-gradient(135deg, #1e88e5, #42a5f5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 136, 229, 0.3);
+}
+
+/* Calendar Modal */
+.calendar-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.calendar-modal {
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 460px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.calendar-modal h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.4rem;
+    text-align: center;
+}
+
+.modal-subtitle {
+    text-align: center;
+    color: #888;
+    margin: 0 0 20px 0;
+    font-size: 0.9rem;
+}
+
+.calendar-warning {
+    background: rgba(255, 152, 0, 0.15);
+    border: 1px solid rgba(255, 152, 0, 0.4);
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    color: #ffb74d;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.modal-info {
+    background: #222;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
+
+.modal-info p {
+    margin: 4px 0;
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.modal-date-label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: #ccc;
+    margin-bottom: 25px;
+}
+
+.modal-date-input {
+    padding: 12px;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.modal-cancel-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #aaa;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.modal-cancel-btn:hover {
+    background: #444;
+    color: white;
+}
+
+.modal-generate-btn {
+    background: linear-gradient(135deg, #1565c0, #1e88e5);
+    border: none;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.modal-generate-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1e88e5, #42a5f5);
+}
+
+.modal-generate-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Partido Center (score + datetime) */
+.partido-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.partido-card {
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background: transparent;
+}
+
+.partido-card.clickable .partido-row {
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.partido-card.clickable:hover .partido-row {
+    transform: translateY(-2px);
+    background-color: #222;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Partido Reorder */
+.partido-reorder {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.reorder-btn {
+    background: transparent;
+    border: 1px solid #444;
+    color: #888;
+    width: 22px;
+    height: 18px;
+    min-width: 22px;
+    min-height: 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.55rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.2s;
+}
+
+.reorder-btn:hover:not(:disabled) {
+    background: #333;
+    color: #d4af37;
+    border-color: #d4af37;
+}
+
+.reorder-btn:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+
+.partido-datetime {
+    font-size: 0.78rem;
+    color: #888;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.datetime-edit-input {
+    padding: 5px 8px;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.8rem;
+    width: 100%;
+    max-width: 200px;
+    margin-top: 2px;
+}
+
+/* ── Score Display ── */
+.partido-vs-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.vs-badge {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #555;
+    letter-spacing: 3px;
+}
+
+.score-display-final {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.score-display-final .score-num {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #d4af37;
+    font-variant-numeric: tabular-nums;
+    transition: opacity 0.3s ease;
+}
+
+.score-display-final .score-num.loser-score {
+    opacity: 0.5;
+    color: #888;
+}
+
+.score-display-final .score-separator {
+    font-size: 1.1rem;
+    color: #555;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+    .partido-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .partido-team.local,
+    .partido-team.visitante {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .partido-score {
+        order: 1;
+    }
+
+    .add-partido-form {
+        flex-direction: column;
+    }
+
+    .add-partido-form select {
+        width: 100%;
+    }
+
+    .fechas-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .fechas-header-actions {
+        justify-content: center;
+    }
+
+    .label-config-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .label-pos-input {
+        justify-content: center;
+    }
+
+    .labels-legend {
+        justify-content: center;
+    }
 }
