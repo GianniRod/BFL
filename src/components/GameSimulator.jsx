@@ -17,10 +17,11 @@ const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) 
 const chance = (pct) => Math.random() * 100 < pct;
 
 // ── Simulation engine ──
-function simulateGame(localTeamName, visitanteTeamName, isLocalHome, teamRatings) {
+export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, teamRatings) {
     const log = [];
     let localScore = 0;
     let visitanteScore = 0;
+    const scoreByQuarter = { local: [0, 0, 0, 0], visitante: [0, 0, 0, 0] };
     const gameClock = [900, 900, 900, 900];
     let quarter = 0;
     let broadcastTime = 0;
@@ -300,7 +301,7 @@ function simulateGame(localTeamName, visitanteTeamName, isLocalHome, teamRatings
                 let pct = fgDist < 30 ? 95 : fgDist <= 40 ? 90 : fgDist <= 50 ? 75 : fgDist <= 60 ? 55 : 20;
                 totalPlays++;
                 if (chance(pct)) {
-                    if (possession === 'local') localScore += 3; else visitanteScore += 3;
+                    if (possession === 'local') { localScore += 3; scoreByQuarter.local[safeQ()] += 3; } else { visitanteScore += 3; scoreByQuarter.visitante[safeQ()] += 3; }
                     push({ desc: `¡FIELD GOAL! Gol de campo de ${fgDist} yardas. ¡Es bueno!`, eventType: 'field_goal', down, yardsToGo, yardLine });
                 } else {
                     push({ desc: `Field goal fallido de ${fgDist} yardas.`, eventType: 'missed_fg', down, yardsToGo, yardLine });
@@ -338,7 +339,7 @@ function simulateGame(localTeamName, visitanteTeamName, isLocalHome, teamRatings
 
             if (res.pickSix) {
                 const dt = def(possession);
-                if (dt === 'local') localScore += 7; else visitanteScore += 7;
+                if (dt === 'local') { localScore += 7; scoreByQuarter.local[safeQ()] += 7; } else { visitanteScore += 7; scoreByQuarter.visitante[safeQ()] += 7; }
                 push({ desc: `¡PICK SIX TOUCHDOWN para ${tn(dt)}!`, eventType: 'touchdown' });
                 broadcastTime += 90;
                 push({ desc: 'Pausa comercial', eventType: 'commercial' });
@@ -364,7 +365,7 @@ function simulateGame(localTeamName, visitanteTeamName, isLocalHome, teamRatings
         // Safety
         if (yardLine <= 0) {
             const dt = def(possession);
-            if (dt === 'local') localScore += 2; else visitanteScore += 2;
+            if (dt === 'local') { localScore += 2; scoreByQuarter.local[safeQ()] += 2; } else { visitanteScore += 2; scoreByQuarter.visitante[safeQ()] += 2; }
             push({ desc: `¡SAFETY! 2 puntos para ${tn(dt)}`, eventType: 'safety', down, yardsToGo, yardLine: 0 });
             broadcastTime += 60;
             flipPoss(35);
@@ -373,7 +374,7 @@ function simulateGame(localTeamName, visitanteTeamName, isLocalHome, teamRatings
 
         // Touchdown
         if (yardLine >= 100) {
-            if (possession === 'local') localScore += 7; else visitanteScore += 7;
+            if (possession === 'local') { localScore += 7; scoreByQuarter.local[safeQ()] += 7; } else { visitanteScore += 7; scoreByQuarter.visitante[safeQ()] += 7; }
             push({ desc: res.desc, eventType: 'play', down, yardsToGo, yardLine: 100 });
             push({ desc: `¡TOUCHDOWN ${tn(possession)}!`, eventType: 'touchdown' });
             tick(randomBetween(5, 10));
@@ -447,7 +448,7 @@ function simulateGame(localTeamName, visitanteTeamName, isLocalHome, teamRatings
         oddsTimeline.push(lastOdds);
     }
 
-    return { log, localScore, visitanteScore, stats, totalPlays, driveCount, broadcastTime, oddsTimeline };
+    return { log, localScore, visitanteScore, stats, totalPlays, driveCount, broadcastTime, oddsTimeline, scoreByQuarter };
 }
 
 // ── Quick lightweight sim for Monte Carlo (no logging) ──
@@ -504,7 +505,7 @@ const toDecimalOdds = (pct) => {
     return (100 / pct).toFixed(2);
 };
 
-const parseStarValue = (v) => {
+export const parseStarValue = (v) => {
     const num = parseFloat(v) || 0;
     return num > 5 ? num / 10 : num;
 };
@@ -557,7 +558,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
     };
 
     const scheduleNext = (result, spd) => {
-        const delay = Math.max(10, 80 / spd);
+        const delay = Math.max(10, 1000 / spd);
         const step = () => {
             if (!mountedRef.current) return;
             const idx = indexRef.current;
@@ -602,8 +603,8 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
         }
     };
 
-    const changeSpeed = () => {
-        const newSpd = speed === 1 ? 2 : speed === 2 ? 4 : 1;
+    const handleSpeedChange = (e) => {
+        const newSpd = parseInt(e.target.value, 10);
         setSpeed(newSpd);
         if (phase === 'simulating' && gameResultRef.current) {
             stopTimer();
@@ -617,7 +618,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
             const scoringPlays = r.log.filter(l =>
                 ['touchdown', 'field_goal', 'safety', 'pick_six', 'game_end'].includes(l.eventType)
             );
-            onFinish(r.localScore, r.visitanteScore, r.stats, scoringPlays, r.totalPlays, r.driveCount, r.broadcastTime);
+            onFinish(r.localScore, r.visitanteScore, r.stats, scoringPlays, r.totalPlays, r.driveCount, r.broadcastTime, r.scoreByQuarter);
         }
     };
 
@@ -710,7 +711,16 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                             <div className="sim-log-controls">
                                 {phase === 'simulating' && (
                                     <>
-                                        <button className="sim-speed-btn" onClick={changeSpeed}>Velocidad: {speed}x</button>
+                                        <div className="sim-speed-control">
+                                            <span className="sim-speed-label">{speed}x</span>
+                                            <input
+                                                type="range"
+                                                min="1" max="100"
+                                                value={speed}
+                                                onChange={handleSpeedChange}
+                                                className="sim-speed-slider"
+                                            />
+                                        </div>
                                         <button className="sim-skip-btn" onClick={skipToEnd}>Ver Resultado Final</button>
                                     </>
                                 )}
@@ -737,6 +747,26 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                 {phase === 'finished' && result && (
                     <div className="sim-stats-panel">
                         <h4 className="sim-stats-title">Estadísticas del Partido</h4>
+
+                        {result.scoreByQuarter && (
+                            <div className="sim-quarter-scores">
+                                <div className="sq-row sq-header">
+                                    <span className="sq-team"></span>
+                                    <span>Q1</span><span>Q2</span><span>Q3</span><span>Q4</span><span className="sq-tot">TOT</span>
+                                </div>
+                                <div className="sq-row">
+                                    <span className="sq-team">{localTeam?.['Team Name'] || 'Local'}</span>
+                                    {result.scoreByQuarter.local.map((s, i) => <span key={`l${i}`}>{s}</span>)}
+                                    <span className="sq-tot">{result.localScore}</span>
+                                </div>
+                                <div className="sq-row">
+                                    <span className="sq-team">{visitanteTeam?.['Team Name'] || 'Visit'}</span>
+                                    {result.scoreByQuarter.visitante.map((s, i) => <span key={`v${i}`}>{s}</span>)}
+                                    <span className="sq-tot">{result.visitanteScore}</span>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="sim-stats-grid">
                             <StatRow label="Yardas totales" local={result.stats?.local?.totalYards ?? '-'} visit={result.stats?.visitante?.totalYards ?? '-'} />
                             <StatRow label="Yardas por pase" local={result.stats?.local?.passingYards ?? '-'} visit={result.stats?.visitante?.passingYards ?? '-'} />
