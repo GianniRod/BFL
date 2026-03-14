@@ -781,7 +781,7 @@
 }
 
 /* ── Mobile responsive ── */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .sim-modal {
         width: 100%;
         max-height: 100vh;
@@ -794,39 +794,188 @@
     }
 
     .sim-scoreboard {
-        padding: 20px 12px 12px;
+        padding: 16px 10px 10px;
+        gap: 6px;
     }
 
     .sim-team-logo {
-        width: 42px;
-        height: 42px;
+        width: 38px;
+        height: 38px;
     }
 
     .sim-team-name {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
+    }
+
+    .sim-home-badge {
+        font-size: 0.55rem;
+        padding: 1px 4px;
     }
 
     .sim-score-local,
     .sim-score-visit {
-        font-size: 2.2rem;
+        font-size: 2rem;
+    }
+
+    .sim-score-sep {
+        font-size: 1.2rem;
+    }
+
+    .sim-quarter-info {
+        gap: 4px;
+    }
+
+    .sim-quarter,
+    .sim-clock {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+
+    /* Quarters bar */
+    .sim-quarters-bar {
+        gap: 6px;
+        margin: 0 10px;
+    }
+
+    .sim-q-dot {
+        font-size: 0.65rem;
+        padding: 3px 8px;
+    }
+
+    /* Odds bar */
+    .sim-odds-bar {
+        margin: 6px 10px;
+    }
+
+    .sim-odds-values {
+        font-size: 0.75rem;
+    }
+
+    .sim-odds-toggle {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+
+    /* Log controls - stack vertically */
+    .sim-log-header {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 10px;
+    }
+
+    .sim-log-controls {
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .sim-speed-control,
+    .sim-real-time,
+    .sim-until-control {
+        padding: 4px 8px;
+        gap: 6px;
+        font-size: 0.75rem;
+    }
+
+    .sim-speed-slider {
+        width: 70px;
+    }
+
+    .sim-speed-label {
+        font-size: 0.75rem;
+        min-width: 28px;
+    }
+
+    .sim-until-input {
+        min-width: 85px;
+        font-size: 0.7rem;
+    }
+
+    .sim-until-btn {
+        font-size: 0.65rem;
+        padding: 3px 6px;
+    }
+
+    .sim-skip-btn {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+
+    /* Log area */
+    .sim-log-container {
+        margin: 0 8px;
     }
 
     .sim-log {
-        max-height: 250px;
+        max-height: 200px;
     }
 
+    .sim-play-entry {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+
+    .sim-play-icon {
+        font-size: 0.65rem;
+        min-width: 22px;
+    }
+
+    .sim-play-clock {
+        font-size: 0.65rem;
+    }
+
+    /* Idle */
     .sim-start-btn {
-        padding: 14px 36px;
+        padding: 12px 30px;
+        font-size: 0.95rem;
+    }
+
+    .sim-matchup-vs {
+        font-size: 1.5rem;
+    }
+
+    /* Stats panel */
+    .sim-stats-panel {
+        margin: 0 8px 8px;
+        padding: 14px;
+    }
+
+    .sim-stats-title {
         font-size: 1rem;
     }
 
     .sim-stat-row {
-        gap: 8px;
+        gap: 6px;
     }
 
     .sim-stat-val {
+        font-size: 0.75rem;
+        min-width: 30px;
+    }
+
+    .sim-stat-label {
+        font-size: 0.75rem;
+    }
+
+    .sim-game-info {
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.75rem;
+    }
+
+    .sim-save-btn {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    /* Quarter scores */
+    .sq-row {
         font-size: 0.8rem;
-        min-width: 35px;
+    }
+
+    .sq-team {
+        font-size: 0.7rem;
     }
 }
 
