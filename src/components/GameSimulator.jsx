@@ -529,112 +529,55 @@ const EVT_ICON = {
 };
 
 // ── Component ──
-function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose, readOnlyResult }) {
-    const [phase, setPhase] = useState(readOnlyResult ? 'finished' : 'idle');
-    const [visiblePlays, setVisiblePlays] = useState(readOnlyResult?.log || []);
-    const [speed, setSpeed] = useState(1);
-    const [oddsMode, setOddsMode] = useState('decimal'); // 'decimal' | 'pct'
-
-    const gameResultRef = useRef(readOnlyResult || null);
+function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose, readOnlyResult, liveEngine, onStartLive, onSpeedChange, onSkipToEnd }) {
     const logRef = useRef(null);
-    const timerRef = useRef(null);
-    const indexRef = useRef(0);
-    const mountedRef = useRef(true);
+    const [oddsMode, setOddsMode] = useState('decimal');
 
-    useEffect(() => {
-        mountedRef.current = true;
-        return () => {
-            mountedRef.current = false;
-            if (timerRef.current) clearTimeout(timerRef.current);
-        };
-    }, []);
+    // Determine phase and visible plays based on props
+    let phase = 'idle';
+    let visiblePlays = [];
+    let speed = 1;
+    let result = null;
 
-    // Auto-scroll
+    if (readOnlyResult) {
+        phase = 'finished';
+        visiblePlays = readOnlyResult.log || [];
+        result = readOnlyResult;
+    } else if (liveEngine) {
+        result = liveEngine.result;
+        speed = liveEngine.speed;
+        if (liveEngine.currentIndex >= result.log.length) {
+            phase = 'finished';
+        } else {
+            phase = 'simulating';
+        }
+        visiblePlays = result.log.slice(0, liveEngine.currentIndex + 1);
+    }
+
+    // Auto-scroll logic
     useEffect(() => {
         if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
     }, [visiblePlays]);
 
-    const speedRef = useRef(speed);
-    useEffect(() => { speedRef.current = speed; }, [speed]);
-
-    const stopTimer = () => {
-        if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-    };
-
-    const scheduleNext = (result) => {
-        const step = () => {
-            if (!mountedRef.current) return;
-            const idx = indexRef.current;
-            if (idx >= result.log.length) {
-                timerRef.current = null;
-                setPhase('finished');
-                return;
-            }
-            setVisiblePlays(result.log.slice(0, idx + 1));
-            indexRef.current = idx + 1;
-
-            if (idx + 1 < result.log.length) {
-                const currentPlay = result.log[idx];
-                const nextPlay = result.log[idx + 1];
-                let diff = (nextPlay.broadcastTime || 0) - (currentPlay.broadcastTime || 0);
-                if (diff < 1 || isNaN(diff)) diff = 5; // Failsafe
-
-                const delay = Math.max(10, (diff * 1000) / speedRef.current);
-                timerRef.current = setTimeout(step, delay);
-            } else {
-                timerRef.current = setTimeout(step, 100);
-            }
-        };
-        // Initial quick delay for the very first play
-        timerRef.current = setTimeout(step, 100);
-    };
-
     const startSimulation = () => {
-        const result = simulateGame(
-            localTeam?.['Team Name'] || 'Local',
-            visitanteTeam?.['Team Name'] || 'Visitante',
-            isLocalHome,
-            {
-                localOff: parseStarValue(localTeam?.['Offensive Stars'] || 3),
-                localDef: parseStarValue(localTeam?.['Deffensive Stars'] || 3),
-                visitOff: parseStarValue(visitanteTeam?.['Offensive Stars'] || 3),
-                visitDef: parseStarValue(visitanteTeam?.['Deffensive Stars'] || 3),
-            }
-        );
-        gameResultRef.current = result;
-        indexRef.current = 0;
-        setVisiblePlays([]);
-        setPhase('simulating');
-        scheduleNext(result);
+        if (onStartLive) onStartLive();
     };
 
     const skipToEnd = () => {
-        stopTimer();
-        const result = gameResultRef.current;
-        if (result) {
-            setVisiblePlays([...result.log]);
-            indexRef.current = result.log.length;
-            setPhase('finished');
-        }
+        if (onSkipToEnd) onSkipToEnd();
     };
 
     const handleSpeedChange = (e) => {
         const newSpd = parseInt(e.target.value, 10);
-        setSpeed(newSpd);
-        speedRef.current = newSpd;
-        if (phase === 'simulating' && gameResultRef.current) {
-            stopTimer();
-            scheduleNext(gameResultRef.current);
-        }
+        if (onSpeedChange) onSpeedChange(newSpd);
     };
 
     const handleSave = () => {
-        const r = gameResultRef.current;
-        if (r && onFinish) {
-            const scoringPlays = r.log.filter(l =>
+        if (result && onFinish) {
+            const scoringPlays = result.log.filter(l =>
                 ['touchdown', 'field_goal', 'safety', 'pick_six', 'game_end'].includes(l.eventType)
             );
-            onFinish(r.localScore, r.visitanteScore, r.stats, scoringPlays, r.totalPlays, r.driveCount, r.broadcastTime, r.scoreByQuarter);
+            onFinish(result.localScore, result.visitanteScore, result.stats, scoringPlays, result.totalPlays, result.driveCount, result.broadcastTime, result.scoreByQuarter);
         }
     };
 
@@ -643,7 +586,6 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
     const visitS = last ? last.visitanteScore : 0;
     const curQ = last ? (last.quarter || 1) : 1;
     const curClk = last ? (last.gameClock ?? 900) : 900;
-    const result = gameResultRef.current;
 
     // Get current odds from pre-computed timeline
     const playIdx = visiblePlays.length - 1;
