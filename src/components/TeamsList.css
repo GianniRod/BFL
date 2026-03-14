@@ -66,10 +66,8 @@
     justify-content: space-between;
 }
 
-.stars span {
-    display: block;
-    margin-top: 5px;
-    color: gold;
+.stars {
+    margin-top: 8px;
 }
 
 .star-icon {
