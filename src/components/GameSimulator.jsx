@@ -415,7 +415,74 @@ function simulateGame(localTeamName, visitanteTeamName, isLocalHome, teamRatings
 
     push({ desc: '¡Fin del partido!', eventType: 'game_end' });
 
-    return { log, localScore, visitanteScore, stats, totalPlays, driveCount, broadcastTime };
+    // ── Pre-compute Monte Carlo odds at each log entry ──
+    const MC_SIMS = 50;
+    const oddsTimeline = [];
+    let lastOdds = { local: 50, visit: 50 };
+    for (let li = 0; li < log.length; li++) {
+        const entry = log[li];
+        // Only compute on scoring events, quarter changes, and every ~15 plays
+        const isKey = ['touchdown', 'field_goal', 'safety', 'halftime', 'quarter_end', 'game_end'].includes(entry.eventType);
+        if (!isKey && li % 15 !== 0 && li !== 0) {
+            oddsTimeline.push(lastOdds);
+            continue;
+        }
+        if (entry.eventType === 'game_end') {
+            const lw = entry.localScore > entry.visitanteScore ? 100 : entry.localScore < entry.visitanteScore ? 0 : 50;
+            lastOdds = { local: lw, visit: 100 - lw };
+            oddsTimeline.push(lastOdds);
+            continue;
+        }
+        // Quick Monte Carlo from this state
+        let localWins = 0;
+        const remainQ = Math.max(0, 4 - (entry.quarter || 1));
+        const remainClock = (entry.gameClock || 0) + remainQ * 900;
+        for (let s = 0; s < MC_SIMS; s++) {
+            const fs = quickSimRemainder(entry.localScore, entry.visitanteScore, remainClock, teamRatings, isLocalHome);
+            if (fs.local > fs.visit) localWins++;
+            else if (fs.local === fs.visit) localWins += 0.5;
+        }
+        const lPct = Math.round((localWins / MC_SIMS) * 100);
+        lastOdds = { local: lPct, visit: 100 - lPct };
+        oddsTimeline.push(lastOdds);
+    }
+
+    return { log, localScore, visitanteScore, stats, totalPlays, driveCount, broadcastTime, oddsTimeline };
+}
+
+// ── Quick lightweight sim for Monte Carlo (no logging) ──
+function quickSimRemainder(lScore, vScore, remainingSeconds, teamRatings, isLocalHome) {
+    let localScore = lScore;
+    let visitanteScore = vScore;
+    let timeLeft = remainingSeconds;
+    const localOff = parseFloat(teamRatings?.localOff) || 3;
+    const localDef = parseFloat(teamRatings?.localDef) || 3;
+    const visitOff = parseFloat(teamRatings?.visitOff) || 3;
+    const visitDef = parseFloat(teamRatings?.visitDef) || 3;
+    let possession = chance(50) ? 'local' : 'visitante';
+
+    while (timeLeft > 0) {
+        const ventaja = possession === 'local'
+            ? (localOff - visitDef) + (isLocalHome ? 0.25 : -0.25)
+            : (visitOff - localDef) - (isLocalHome ? 0.25 : -0.25);
+
+        const tdPct = Math.max(5, Math.min(45, 22 + ventaja * 3));
+        const fgPct = 15;
+        const toPct = Math.max(3, Math.min(25, 10 - ventaja * 1.5));
+        const driveTime = randomBetween(90, 180);
+        const roll = Math.random() * 100;
+
+        if (roll < tdPct) {
+            if (possession === 'local') localScore += 7; else visitanteScore += 7;
+        } else if (roll < tdPct + fgPct) {
+            if (possession === 'local') localScore += 3; else visitanteScore += 3;
+        }
+        // else: punt or turnover — no score
+
+        timeLeft -= driveTime;
+        possession = possession === 'local' ? 'visitante' : 'local';
+    }
+    return { local: localScore, visit: visitanteScore };
 }
 
 // ── Format helpers ──
@@ -430,6 +497,14 @@ const fmtTime = (s) => {
     const m = Math.floor((s % 3600) / 60);
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
 };
+
+const toDecimalOdds = (pct) => {
+    if (pct <= 0) return '∞';
+    if (pct >= 100) return '1.00';
+    return (100 / pct).toFixed(2);
+};
+
+
 
 // ── Event styling ──
 const EVT_CLASS = {
@@ -451,6 +526,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
     const [phase, setPhase] = useState('idle');
     const [visiblePlays, setVisiblePlays] = useState([]);
     const [speed, setSpeed] = useState(1);
+    const [oddsMode, setOddsMode] = useState('decimal'); // 'decimal' | 'pct'
 
     const gameResultRef = useRef(null);
     const logRef = useRef(null);
@@ -542,6 +618,10 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
     const curClk = last ? (last.gameClock ?? 900) : 900;
     const result = gameResultRef.current;
 
+    // Get current odds from pre-computed timeline
+    const playIdx = visiblePlays.length - 1;
+    const currentOdds = result?.oddsTimeline?.[playIdx] || { local: 50, visit: 50 };
+
     return (
         <div className="sim-overlay" onClick={onClose}>
             <div className="sim-modal" onClick={(e) => e.stopPropagation()}>
@@ -580,6 +660,27 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                         {[1, 2, 3, 4].map(q => (
                             <div key={q} className={`sim-q-dot ${q <= curQ ? 'active' : ''} ${q === curQ ? 'current' : ''}`}>Q{q}</div>
                         ))}
+                    </div>
+                )}
+
+                {/* Live Odds Bar */}
+                {phase !== 'idle' && (
+                    <div className="sim-odds-bar">
+                        <div className="sim-odds-values">
+                            <span className="sim-odds-local">
+                                {oddsMode === 'decimal' ? toDecimalOdds(currentOdds.local) : `${currentOdds.local}%`}
+                            </span>
+                            <button className="sim-odds-toggle" onClick={() => setOddsMode(m => m === 'decimal' ? 'pct' : 'decimal')}>
+                                {oddsMode === 'decimal' ? '📊 Cuotas' : '% Prob.'}
+                            </button>
+                            <span className="sim-odds-visit">
+                                {oddsMode === 'decimal' ? toDecimalOdds(currentOdds.visit) : `${currentOdds.visit}%`}
+                            </span>
+                        </div>
+                        <div className="sim-odds-track">
+                            <div className="sim-odds-fill-local" style={{ width: `${currentOdds.local}%` }} />
+                            <div className="sim-odds-fill-visit" style={{ width: `${currentOdds.visit}%` }} />
+                        </div>
                     </div>
                 )}
 
