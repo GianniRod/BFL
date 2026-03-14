@@ -5,7 +5,7 @@ import './Header.css';
 function Header() {
     return (
         <header className="app-header">
-            <div className="logo">BFL</div>
+            <div className="logo"><img src="https://i.postimg.cc/ZYx0Dhqb/BRASIL-2.png" alt="BFL" className="header-logo" /></div>
             <nav>
                 <Link to="/">Equipos</Link>
                 <Link to="/fixture">Fixture</Link>
