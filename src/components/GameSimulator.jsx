@@ -82,6 +82,7 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
             gameClock: gameClock[safeQ()] || 0,
             localScore,
             visitanteScore,
+            broadcastTime
         });
     };
 
@@ -553,12 +554,14 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
         if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
     }, [visiblePlays]);
 
+    const speedRef = useRef(speed);
+    useEffect(() => { speedRef.current = speed; }, [speed]);
+
     const stopTimer = () => {
         if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
     };
 
-    const scheduleNext = (result, spd) => {
-        const delay = Math.max(10, 1000 / spd);
+    const scheduleNext = (result) => {
         const step = () => {
             if (!mountedRef.current) return;
             const idx = indexRef.current;
@@ -569,9 +572,21 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
             }
             setVisiblePlays(result.log.slice(0, idx + 1));
             indexRef.current = idx + 1;
-            timerRef.current = setTimeout(step, delay);
+
+            if (idx + 1 < result.log.length) {
+                const currentPlay = result.log[idx];
+                const nextPlay = result.log[idx + 1];
+                let diff = (nextPlay.broadcastTime || 0) - (currentPlay.broadcastTime || 0);
+                if (diff < 1 || isNaN(diff)) diff = 5; // Failsafe
+
+                const delay = Math.max(10, (diff * 1000) / speedRef.current);
+                timerRef.current = setTimeout(step, delay);
+            } else {
+                timerRef.current = setTimeout(step, 100);
+            }
         };
-        timerRef.current = setTimeout(step, delay);
+        // Initial quick delay for the very first play
+        timerRef.current = setTimeout(step, 100);
     };
 
     const startSimulation = () => {
@@ -590,7 +605,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
         indexRef.current = 0;
         setVisiblePlays([]);
         setPhase('simulating');
-        scheduleNext(result, speed);
+        scheduleNext(result);
     };
 
     const skipToEnd = () => {
@@ -606,9 +621,10 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
     const handleSpeedChange = (e) => {
         const newSpd = parseInt(e.target.value, 10);
         setSpeed(newSpd);
+        speedRef.current = newSpd;
         if (phase === 'simulating' && gameResultRef.current) {
             stopTimer();
-            scheduleNext(gameResultRef.current, newSpd);
+            scheduleNext(gameResultRef.current);
         }
     };
 
