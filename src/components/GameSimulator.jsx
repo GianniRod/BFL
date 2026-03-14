@@ -738,17 +738,17 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                     <div className="sim-stats-panel">
                         <h4 className="sim-stats-title">Estadísticas del Partido</h4>
                         <div className="sim-stats-grid">
-                            <StatRow label="Yardas totales" local={result.stats.local.totalYards} visit={result.stats.visitante.totalYards} />
-                            <StatRow label="Yardas por pase" local={result.stats.local.passingYards} visit={result.stats.visitante.passingYards} />
-                            <StatRow label="Yardas por carrera" local={result.stats.local.rushingYards} visit={result.stats.visitante.rushingYards} />
-                            <StatRow label="Primeros downs" local={result.stats.local.firstDowns} visit={result.stats.visitante.firstDowns} />
-                            <StatRow label="Turnovers" local={result.stats.local.turnovers} visit={result.stats.visitante.turnovers} neg />
-                            <StatRow label="T. de posesión" local={fmtTime(result.stats.local.timeOfPossession)} visit={fmtTime(result.stats.visitante.timeOfPossession)} text />
+                            <StatRow label="Yardas totales" local={result.stats?.local?.totalYards ?? '-'} visit={result.stats?.visitante?.totalYards ?? '-'} />
+                            <StatRow label="Yardas por pase" local={result.stats?.local?.passingYards ?? '-'} visit={result.stats?.visitante?.passingYards ?? '-'} />
+                            <StatRow label="Yardas por carrera" local={result.stats?.local?.rushingYards ?? '-'} visit={result.stats?.visitante?.rushingYards ?? '-'} />
+                            <StatRow label="Primeros downs" local={result.stats?.local?.firstDowns ?? '-'} visit={result.stats?.visitante?.firstDowns ?? '-'} />
+                            <StatRow label="Turnovers" local={result.stats?.local?.turnovers ?? '-'} visit={result.stats?.visitante?.turnovers ?? '-'} neg />
+                            <StatRow label="T. de posesión" local={result.stats?.local?.timeOfPossession != null ? fmtTime(result.stats.local.timeOfPossession) : '-'} visit={result.stats?.visitante?.timeOfPossession != null ? fmtTime(result.stats.visitante.timeOfPossession) : '-'} text />
                         </div>
                         <div className="sim-game-info">
-                            <span>Total jugadas: {result.totalPlays}</span>
-                            <span>Drives: {result.driveCount}</span>
-                            <span>Duración TV: {fmtTime(result.broadcastTime)}</span>
+                            <span>Total jugadas: {result.totalPlays ?? '-'}</span>
+                            <span>Drives: {result.driveCount ?? '-'}</span>
+                            <span>Duración TV: {result.broadcastTime != null ? fmtTime(result.broadcastTime) : '-'}</span>
                         </div>
                         {!readOnlyResult && (
                             <button className="sim-save-btn" onClick={handleSave}>Guardar Resultado</button>
