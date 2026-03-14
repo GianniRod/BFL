@@ -226,26 +226,26 @@
 }
 
 .sim-start-btn {
-    background: linear-gradient(135deg, #c9962b, #d4af37, #e5c44a);
+    background: #d4af37;
     color: #000;
     border: none;
-    padding: 16px 48px;
-    border-radius: 14px;
-    font-size: 1.2rem;
-    font-weight: 800;
+    padding: 14px 40px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.2s ease;
     letter-spacing: 0.5px;
-    box-shadow: 0 8px 24px rgba(212, 175, 55, 0.25);
 }
 
 .sim-start-btn:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 12px 36px rgba(212, 175, 55, 0.35);
+    background: #e5c44a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
 
 .sim-start-btn:active {
-    transform: translateY(0) scale(0.98);
+    transform: translateY(0);
 }
 
 /* ── Play-by-play log ── */
@@ -343,11 +343,16 @@
 }
 
 .sim-play-icon {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
+    font-weight: bold;
     flex-shrink: 0;
-    width: 24px;
+    width: 32px;
     text-align: center;
-    padding-top: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 3px 0;
+    margin-right: 5px;
+    color: #ccc;
 }
 
 .sim-play-content {
@@ -596,22 +601,21 @@
     display: block;
     width: 100%;
     margin-top: 20px;
-    background: linear-gradient(135deg, #1b5e20, #2e7d32);
+    background: #1b5e20;
     color: white;
-    border: none;
-    padding: 14px;
-    border-radius: 12px;
-    font-size: 1.05rem;
+    border: 1px solid #4caf50;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 16px rgba(46, 125, 50, 0.3);
+    transition: all 0.2s ease;
 }
 
 .sim-save-btn:hover {
-    background: linear-gradient(135deg, #2e7d32, #43a047);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(46, 125, 50, 0.4);
+    background: #2e7d32;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
 }
 
 /* ── Score pulse animation ── */
