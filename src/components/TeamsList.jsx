@@ -1,6 +1,8 @@
 
 import { useEffect, useState } from 'react';
 import { subscribeToTeams } from '../services/db';
+import { db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import './TeamsList.css';
 
 function TeamsList() {
@@ -65,6 +67,15 @@ function TeamsList() {
         );
     }
 
+    const updateStars = async (teamId, field, newVal) => {
+        const clamped = Math.min(5, Math.max(0, newVal));
+        try {
+            await updateDoc(doc(db, 'teams', teamId), { [field]: clamped });
+        } catch (e) {
+            console.error('Error updating stars:', e);
+        }
+    };
+
     const renderStars = (rating) => {
         const val = Math.min(5, Math.max(0, parseFloat(rating) || 0));
         const full = Math.floor(val);
@@ -76,6 +87,18 @@ function TeamsList() {
                 {hasHalf && <span className="half-star">★</span>}
                 {'☆'.repeat(empty)}
             </>
+        );
+    };
+
+    const StarEditor = ({ teamId, field, value }) => {
+        const val = parseFloat(value) || 0;
+        return (
+            <div className="star-editor">
+                <button className="star-adj-btn" onClick={() => updateStars(teamId, field, val - 0.5)}>−</button>
+                <span className="star-display">{renderStars(val)}</span>
+                <span className="star-value">{val}</span>
+                <button className="star-adj-btn" onClick={() => updateStars(teamId, field, val + 0.5)}>+</button>
+            </div>
         );
     };
 
@@ -96,8 +119,14 @@ function TeamsList() {
                         <p><strong>Ciudad:</strong> {team['City']}</p>
                         <p><strong>Títulos:</strong> {team['League Titles']}</p>
                         <div className="stars">
-                            <span>Ofensiva: {renderStars(team['Offensive Stars'])}</span>
-                            <span>Defensa: {renderStars(team['Deffensive Stars'])}</span>
+                            <div className="star-row">
+                                <span className="star-label">Ofensiva:</span>
+                                <StarEditor teamId={team.id} field="Offensive Stars" value={team['Offensive Stars']} />
+                            </div>
+                            <div className="star-row">
+                                <span className="star-label">Defensa:</span>
+                                <StarEditor teamId={team.id} field="Deffensive Stars" value={team['Deffensive Stars']} />
+                            </div>
                         </div>
                     </div>
                 </div>
