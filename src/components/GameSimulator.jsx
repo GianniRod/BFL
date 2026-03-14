@@ -236,7 +236,7 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
     // ── MAIN LOOP ──
     push({ desc: `${tn(possession)} recibe el kickoff`, eventType: 'kickoff' });
     stats[possession].drives++;
-    broadcastTime += 45;
+    broadcastTime += 30;
 
     let iter = 0;
     while (quarter < 4 && iter < 800) {
@@ -246,23 +246,23 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
         if (quarter === 1 && !twoMinQ2 && (gameClock[1] || 0) <= 120) {
             twoMinQ2 = true;
             push({ desc: 'Two Minute Warning – Segundo Cuarto', eventType: 'two_min' });
-            broadcastTime += 150;
+            broadcastTime += 90;
         }
         if (quarter === 3 && !twoMinQ4 && (gameClock[3] || 0) <= 120) {
             twoMinQ4 = true;
             push({ desc: 'Two Minute Warning – Cuarto Cuarto', eventType: 'two_min' });
-            broadcastTime += 150;
+            broadcastTime += 90;
         }
 
         // Quarter end
         if ((gameClock[safeQ()] || 0) <= 0) {
             if (quarter === 1) {
                 push({ desc: 'Medio Tiempo', eventType: 'halftime' });
-                broadcastTime += 720;
+                broadcastTime += 480;
                 quarter = 2;
                 flipPoss(25);
                 push({ desc: `${tn(possession)} recibe el kickoff de la segunda mitad`, eventType: 'kickoff' });
-                broadcastTime += 45;
+                broadcastTime += 30;
                 quarter = 2;
                 continue;
             }
@@ -276,7 +276,7 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
         if (down > 4) {
             push({ desc: 'Turnover on downs', eventType: 'turnover', down: 4, yardsToGo, yardLine });
             const nyl = Math.max(1, Math.min(99, 100 - yardLine));
-            if (chance(80)) { push({ desc: 'Pausa comercial', eventType: 'commercial' }); broadcastTime += randomBetween(120, 150); }
+            if (chance(50)) { push({ desc: 'Pausa comercial', eventType: 'commercial' }); broadcastTime += randomBetween(60, 90); }
             flipPoss(nyl);
             continue;
         }
@@ -291,9 +291,9 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
                 push({ desc: `Punt de ${py} yardas. Retorno de ${ry} yardas.`, eventType: 'punt', down, yardsToGo, yardLine });
                 const nyl = Math.max(1, Math.min(99, 100 - (yardLine + py) + ry));
                 tick(randomBetween(5, 8));
-                broadcastTime += 70;
+                broadcastTime += 45;
                 totalPlays++;
-                if (chance(80)) { push({ desc: 'Pausa comercial', eventType: 'commercial' }); broadcastTime += randomBetween(120, 150); }
+                if (chance(50)) { push({ desc: 'Pausa comercial', eventType: 'commercial' }); broadcastTime += randomBetween(60, 90); }
                 flipPoss(nyl);
                 continue;
             }
@@ -309,9 +309,9 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
                     push({ desc: `Field goal fallido de ${fgDist} yardas.`, eventType: 'missed_fg', down, yardsToGo, yardLine });
                 }
                 tick(randomBetween(4, 7));
-                broadcastTime += 75;
+                broadcastTime += 50;
                 push({ desc: 'Pausa comercial', eventType: 'commercial' });
-                broadcastTime += randomBetween(120, 150);
+                broadcastTime += randomBetween(60, 90);
                 flipPoss(25);
                 continue;
             }
@@ -323,7 +323,7 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
             driveOver = false;
             flipPoss(25);
             push({ desc: `${tn(possession)} recibe el kickoff`, eventType: 'kickoff' });
-            broadcastTime += 45;
+            broadcastTime += 30;
             tick(randomBetween(5, 8));
             continue;
         }
@@ -343,14 +343,14 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
                 const dt = def(possession);
                 if (dt === 'local') { localScore += 7; scoreByQuarter.local[safeQ()] += 7; } else { visitanteScore += 7; scoreByQuarter.visitante[safeQ()] += 7; }
                 push({ desc: `¡PICK SIX TOUCHDOWN para ${tn(dt)}!`, eventType: 'touchdown' });
-                broadcastTime += 90;
+                broadcastTime += 60;
                 push({ desc: 'Pausa comercial', eventType: 'commercial' });
-                broadcastTime += randomBetween(120, 150);
+                broadcastTime += randomBetween(60, 90);
                 driveOver = true;
             } else {
                 tick(randomBetween(5, 10));
-                broadcastTime += 60;
-                if (chance(80)) { push({ desc: 'Pausa comercial', eventType: 'commercial' }); broadcastTime += randomBetween(120, 150); }
+                broadcastTime += 40;
+                if (chance(50)) { push({ desc: 'Pausa comercial', eventType: 'commercial' }); broadcastTime += randomBetween(60, 90); }
                 flipPoss(Math.max(1, Math.min(99, 100 - yardLine)));
             }
             continue;
@@ -369,7 +369,7 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
             const dt = def(possession);
             if (dt === 'local') { localScore += 2; scoreByQuarter.local[safeQ()] += 2; } else { visitanteScore += 2; scoreByQuarter.visitante[safeQ()] += 2; }
             push({ desc: `¡SAFETY! 2 puntos para ${tn(dt)}`, eventType: 'safety', down, yardsToGo, yardLine: 0 });
-            broadcastTime += 60;
+            broadcastTime += 40;
             flipPoss(35);
             continue;
         }
@@ -380,19 +380,19 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
             push({ desc: res.desc, eventType: 'play', down, yardsToGo, yardLine: 100 });
             push({ desc: `¡TOUCHDOWN ${tn(possession)}!`, eventType: 'touchdown' });
             tick(randomBetween(5, 10));
-            broadcastTime += 90;
+            broadcastTime += 60;
             push({ desc: 'Pausa comercial', eventType: 'commercial' });
-            broadcastTime += randomBetween(120, 150);
+            broadcastTime += randomBetween(60, 90);
             driveOver = true;
             continue;
         }
 
         // Clock consumption
         let clk;
-        if (res.incomplete || pt === 'spike') { clk = randomBetween(3, 6); broadcastTime += 25; }
-        else if (pt === 'run') { clk = randomBetween(25, 40); broadcastTime += 40; }
-        else if (pt === 'sack') { clk = randomBetween(15, 30); broadcastTime += 35; }
-        else { clk = randomBetween(15, 35); broadcastTime += 35; }
+        if (res.incomplete || pt === 'spike') { clk = randomBetween(3, 6); broadcastTime += 18; }
+        else if (pt === 'run') { clk = randomBetween(25, 40); broadcastTime += 28; }
+        else if (pt === 'sack') { clk = randomBetween(15, 30); broadcastTime += 25; }
+        else { clk = randomBetween(15, 35); broadcastTime += 25; }
 
         if (is2min()) clk = Math.min(clk, randomBetween(10, 15));
         tick(clk);
@@ -403,7 +403,7 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
             stats[possession].firstDowns++;
             down = 1;
             yardsToGo = Math.min(10, 100 - yardLine);
-            broadcastTime += 10;
+            broadcastTime += 5;
             push({ desc: `${res.desc} – PRIMER DOWN`, eventType: 'first_down', down: 1, yardsToGo, yardLine });
         } else {
             down++;
