@@ -1054,6 +1054,59 @@
     margin-top: 2px;
 }
 
+/* ── Simulate Button & Score Display ── */
+.partido-vs-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.vs-badge {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #555;
+    letter-spacing: 3px;
+}
+
+.simulate-btn {
+    background: linear-gradient(135deg, #c9962b, #d4af37);
+    color: #000;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+    box-shadow: 0 3px 10px rgba(212, 175, 55, 0.2);
+}
+
+.simulate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(212, 175, 55, 0.35);
+    background: linear-gradient(135deg, #d4af37, #e5c44a);
+}
+
+.score-display-final {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.score-display-final .score-num {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #d4af37;
+    font-variant-numeric: tabular-nums;
+}
+
+.score-display-final .score-separator {
+    font-size: 1.1rem;
+    color: #555;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 600px) {
     .partido-row {
