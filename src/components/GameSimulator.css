@@ -270,7 +270,36 @@
 
 .sim-log-controls {
     display: flex;
-    gap: 6px;
+    gap: 10px;
+    align-items: center;
+}
+
+.sim-speed-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sim-speed-label {
+    font-size: 0.85rem;
+    color: #d4af37;
+    font-weight: bold;
+    min-width: 35px;
+    text-align: right;
+}
+
+.sim-speed-slider {
+    width: 100px;
+    cursor: pointer;
+    accent-color: #d4af37;
+}
+
+.sim-speed-slider:hover {
+    accent-color: #f1c40f;
 }
 
 .sim-speed-btn,
@@ -755,4 +784,41 @@
         font-size: 0.8rem;
         min-width: 35px;
     }
+}
+
+/* Points per quarter grid */
+.sim-quarter-scores {
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.sq-row {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr 1fr 1fr 1fr;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 0.95rem;
+    color: #ccc;
+    align-items: center;
+}
+
+.sq-header {
+    font-weight: bold;
+    color: #888;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+}
+
+.sq-team {
+    text-align: left;
+    font-weight: 500;
+    color: white;
+}
+
+.sq-tot {
+    font-weight: bold;
+    color: #d4af37;
 }
