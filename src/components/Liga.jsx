@@ -3,7 +3,7 @@ import { subscribeToTeams } from '../services/db';
 import { db } from '../firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import './Liga.css';
-import GameSimulator from './GameSimulator';
+import GameSimulator, { simulateGame, parseStarValue } from './GameSimulator';
 
 const YEARS = [2024, 2025, 2026];
 
@@ -66,6 +66,63 @@ function Liga() {
             setSelectedFechaIndex(fechas.length - 1);
         }
     }, [fechas, selectedFechaIndex]);
+
+    // ── Auto-Simulate Headless (Background) ──
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            const now = new Date();
+
+            fechas.forEach(fecha => {
+                fecha.partidos.forEach(partido => {
+                    // Solo simular si tiene fecha programada menor o igual a AHORA, y los scores son nulos
+                    if (partido.dateTime && partido.localScore === null && partido.visitanteScore === null) {
+                        const matchDate = new Date(partido.dateTime);
+                        if (matchDate <= now) {
+                            const localT = allTeams.find(t => t.id === partido.localId);
+                            const visitanteT = allTeams.find(t => t.id === partido.visitanteId);
+
+                            if (localT && visitanteT) {
+                                console.log(`[BFL Auto-Sim] Ejecutando: ${localT['Team Name']} vs ${visitanteT['Team Name']}`);
+
+                                // Simular offline toda la partida al instante
+                                const result = simulateGame(
+                                    localT['Team Name'] || 'Local',
+                                    visitanteT['Team Name'] || 'Visitante',
+                                    true, // isLocalHome
+                                    {
+                                        localOff: parseStarValue(localT['Offensive Stars'] || 3),
+                                        localDef: parseStarValue(localT['Deffensive Stars'] || 3),
+                                        visitOff: parseStarValue(visitanteT['Offensive Stars'] || 3),
+                                        visitDef: parseStarValue(visitanteT['Deffensive Stars'] || 3),
+                                    }
+                                );
+
+                                const scoringPlays = result.log.filter(l =>
+                                    ['touchdown', 'field_goal', 'safety', 'pick_six', 'game_end'].includes(l.eventType)
+                                );
+
+                                // Guardar el resultado en la misma DB
+                                updatePartidoBothScores(
+                                    fecha.id,
+                                    partido.id,
+                                    String(result.localScore),
+                                    String(result.visitanteScore),
+                                    result.stats,
+                                    scoringPlays,
+                                    result.totalPlays,
+                                    result.driveCount,
+                                    result.broadcastTime,
+                                    result.scoreByQuarter
+                                );
+                            }
+                        }
+                    }
+                });
+            });
+        }, 15000); // Chequear cada 15 segundos
+
+        return () => clearInterval(intervalId);
+    }, [fechas, allTeams]);
 
     // ── Team Management ──
 
@@ -141,13 +198,14 @@ function Liga() {
         await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
 
-    const addPartido = async (fechaId, localId, visitanteId) => {
+    const addPartido = async (fechaId, localId, visitanteId, dateTime = null) => {
         const newPartido = {
             id: Date.now(),
             localId,
             visitanteId,
             localScore: null,
-            visitanteScore: null
+            visitanteScore: null,
+            dateTime
         };
         const newFechas = fechas.map(f =>
             f.id === fechaId ? { ...f, partidos: [...f.partidos, newPartido] } : f
@@ -177,7 +235,7 @@ function Liga() {
         await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
 
-    const updatePartidoBothScores = async (fechaId, partidoId, localScore, visitanteScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime) => {
+    const updatePartidoBothScores = async (fechaId, partidoId, localScore, visitanteScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime, scoreByQuarter) => {
         const newFechas = fechas.map(f =>
             f.id === fechaId ? {
                 ...f,
@@ -190,7 +248,8 @@ function Liga() {
                         scoringPlays: scoringPlays || p.scoringPlays || null,
                         totalPlays: totalPlays || p.totalPlays || null,
                         driveCount: driveCount || p.driveCount || null,
-                        broadcastTime: broadcastTime || p.broadcastTime || null
+                        broadcastTime: broadcastTime || p.broadcastTime || null,
+                        scoreByQuarter: scoreByQuarter || p.scoreByQuarter || null
                     } : p
                 )
             } : f
@@ -916,21 +975,28 @@ function Liga() {
                                                 ))}
                                             </select>
                                             <span className="vs-text">vs</span>
-                                            <select id={`visitante-${fechas[selectedFechaIndex].id}`} defaultValue="">
-                                                <option value="" disabled>Visitante</option>
-                                                {leagueTeamsData.map(team => (
+                                            <select id={`visitante-${fechas[selectedFechaIndex].id}`} className="team-select">
+                                                <option value="">Visitante...</option>
+                                                {allTeams.filter(t => leagueTeams.includes(t.id)).map(team => (
                                                     <option key={team.id} value={team.id}>{team['Team Name']}</option>
                                                 ))}
                                             </select>
+                                            <input
+                                                type="datetime-local"
+                                                id={`datetime-${fechas[selectedFechaIndex].id}`}
+                                                className="add-partido-datetime-new"
+                                            />
                                             <button
                                                 className="add-partido-btn"
                                                 onClick={() => {
                                                     const localSelect = document.getElementById(`local-${fechas[selectedFechaIndex].id}`);
                                                     const visitanteSelect = document.getElementById(`visitante-${fechas[selectedFechaIndex].id}`);
+                                                    const dateTimeInput = document.getElementById(`datetime-${fechas[selectedFechaIndex].id}`);
                                                     if (localSelect.value && visitanteSelect.value) {
-                                                        addPartido(fechas[selectedFechaIndex].id, localSelect.value, visitanteSelect.value);
+                                                        addPartido(fechas[selectedFechaIndex].id, localSelect.value, visitanteSelect.value, dateTimeInput.value || null);
                                                         localSelect.value = '';
                                                         visitanteSelect.value = '';
+                                                        dateTimeInput.value = '';
                                                     }
                                                 }}
                                             >
@@ -961,6 +1027,7 @@ function Liga() {
                     totalPlays: partido.totalPlays || 0,
                     driveCount: partido.driveCount || 0,
                     broadcastTime: partido.broadcastTime || 0,
+                    scoreByQuarter: partido.scoreByQuarter || null,
                 } : null;
 
                 return (
@@ -969,8 +1036,8 @@ function Liga() {
                         visitanteTeam={visitanteT}
                         isLocalHome={true}
                         readOnlyResult={readOnlyData}
-                        onFinish={(lScore, vScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime) => {
-                            updatePartidoBothScores(simulatingPartido.fechaId, simulatingPartido.partidoId, String(lScore), String(vScore), stats, scoringPlays, totalPlays, driveCount, broadcastTime);
+                        onFinish={(lScore, vScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime, scoreByQuarter) => {
+                            updatePartidoBothScores(simulatingPartido.fechaId, simulatingPartido.partidoId, String(lScore), String(vScore), stats, scoringPlays, totalPlays, driveCount, broadcastTime, scoreByQuarter);
                             setSimulatingPartido(null);
                         }}
                         onClose={() => setSimulatingPartido(null)}
