@@ -1148,31 +1148,144 @@
     color: #555;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 600px) {
+/* ── Mobile Responsive ── */
+@media (max-width: 768px) {
+    .liga-container {
+        padding: 10px;
+    }
+
+    .liga-title {
+        font-size: 1.6rem;
+        margin-bottom: 15px;
+    }
+
+    .year-selector {
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    .year-selector select {
+        padding: 8px 12px;
+        font-size: 0.95rem;
+    }
+
+    .config-btn {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+    }
+
+    /* Standings Table */
+    .standings-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .standings-table {
+        font-size: 0.8rem;
+    }
+
+    .standings-table th,
+    .standings-table td {
+        padding: 8px 6px;
+    }
+
+    .standings-table .team-cell {
+        max-width: 100px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mini-logo {
+        width: 22px;
+        height: 22px;
+    }
+
+    /* Calendario */
+    .calendario-section h3 {
+        font-size: 1.1rem;
+    }
+
+    .fecha-carousel {
+        gap: 6px;
+    }
+
+    .carousel-arrow {
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
+    }
+
+    .fecha-selector {
+        font-size: 0.9rem;
+        min-width: 100px;
+    }
+
+    .fecha-content {
+        padding: 10px;
+    }
+
+    /* Match cards */
     .partido-row {
-        flex-direction: column;
-        gap: 15px;
+        padding: 10px 8px;
+        gap: 4px;
     }
 
-    .partido-team.local,
-    .partido-team.visitante {
-        justify-content: center;
-        width: 100%;
+    .partido-left-side,
+    .partido-right-side {
+        gap: 4px;
     }
 
-    .partido-score {
-        order: 1;
+    .partido-logo {
+        width: 24px;
+        height: 24px;
     }
 
-    .add-partido-form {
-        flex-direction: column;
+    .partido-team span {
+        font-size: 0.75rem;
     }
 
-    .add-partido-form select {
-        width: 100%;
+    .score-display-final .score-num {
+        font-size: 1.1rem;
     }
 
+    .score-display-final .score-separator {
+        font-size: 0.9rem;
+    }
+
+    .vs-badge {
+        font-size: 0.85rem;
+    }
+
+    .live-text-badge {
+        font-size: 0.65rem;
+    }
+
+    .partido-center {
+        min-width: 55px;
+    }
+
+    .possession-icon {
+        font-size: 0.75rem;
+        margin: 0 2px;
+    }
+
+    /* Config Panel */
+    .config-panel {
+        padding: 12px;
+    }
+
+    .teams-selector {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 6px;
+    }
+
+    .team-checkbox {
+        padding: 8px;
+        font-size: 0.85rem;
+    }
+
+    /* Fechas header */
     .fechas-header {
         flex-direction: column;
         gap: 10px;
@@ -1183,6 +1296,16 @@
         justify-content: center;
     }
 
+    /* Add partido form */
+    .add-partido-form {
+        flex-direction: column;
+    }
+
+    .add-partido-form select {
+        width: 100%;
+    }
+
+    /* Labels */
     .label-config-row {
         flex-direction: column;
         align-items: stretch;
@@ -1194,5 +1317,39 @@
 
     .labels-legend {
         justify-content: center;
+        gap: 10px;
+    }
+
+    /* Edit standings */
+    .edit-standings {
+        padding: 12px;
+    }
+
+    .team-stats-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .stats-inputs {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    /* Score inputs in config */
+    .score-input {
+        width: 38px;
+        padding: 6px;
+        font-size: 0.85rem;
+    }
+
+    .partido-reorder {
+        gap: 2px;
+    }
+
+    .reorder-btn {
+        width: 22px;
+        height: 22px;
+        font-size: 0.65rem;
     }
 }
