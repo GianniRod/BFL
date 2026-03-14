@@ -636,6 +636,19 @@
     text-align: center;
 }
 
+.live-text-badge {
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.possession-icon {
+    font-size: 0.95rem;
+    margin: 0 6px;
+    vertical-align: middle;
+}
+
 .remove-partido-btn {
     background: #b71c1c;
     border: none;
