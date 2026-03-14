@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { subscribeToTeams } from '../services/db';
 import { db } from '../firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
@@ -30,6 +30,10 @@ function Liga() {
     const [showCalendarModal, setShowCalendarModal] = useState(false);
     const [calendarStartDate, setCalendarStartDate] = useState('');
     const [simulatingPartido, setSimulatingPartido] = useState(null); // { fechaId, partidoId }
+
+    // Background Live Simulations
+    const activeSimsRef = useRef({});
+    const [liveMatchesUI, setLiveMatchesUI] = useState({});
 
     // Subscribe to all teams
     useEffect(() => {
@@ -66,6 +70,99 @@ function Liga() {
             setSelectedFechaIndex(fechas.length - 1);
         }
     }, [fechas, selectedFechaIndex]);
+
+    // ── Live Simulation Engine (Centralized Ticker) ──
+    const updateLiveUI = () => {
+        const newState = {};
+        Object.entries(activeSimsRef.current).forEach(([pid, sim]) => {
+            const play = sim.result.log[Math.min(sim.currentIndex, sim.result.log.length - 1)];
+            if (play) {
+                newState[pid] = {
+                    localScore: play.localScore,
+                    visitanteScore: play.visitanteScore,
+                    quarter: play.quarter,
+                    clock: play.gameClock,
+                    speed: sim.speed,
+                    isActive: true
+                };
+            }
+        });
+        setLiveMatchesUI(newState);
+    };
+
+    useEffect(() => {
+        const ticker = setInterval(() => {
+            const now = Date.now();
+            let hasChanges = false;
+            let finishedMatches = [];
+
+            Object.entries(activeSimsRef.current).forEach(([pid, sim]) => {
+                if (sim.currentIndex >= sim.result.log.length) {
+                    finishedMatches.push({ pid, sim });
+                    return;
+                }
+
+                const currentPlay = sim.result.log[sim.currentIndex];
+                const nextPlay = sim.result.log[sim.currentIndex + 1];
+
+                if (nextPlay) {
+                    let diff = (nextPlay.broadcastTime || 0) - (currentPlay.broadcastTime || 0);
+                    if (diff < 1 || isNaN(diff)) diff = 5;
+                    const requiredDelayMs = (diff * 1000) / sim.speed;
+
+                    if (now - sim.lastTickTime >= requiredDelayMs) {
+                        sim.currentIndex++;
+                        sim.lastTickTime = now;
+                        hasChanges = true;
+                    }
+                } else {
+                    sim.currentIndex++;
+                    hasChanges = true;
+                }
+            });
+
+            finishedMatches.forEach(({ pid, sim }) => {
+                delete activeSimsRef.current[pid];
+                const r = sim.result;
+                const scoringPlays = r.log.filter(l =>
+                    ['touchdown', 'field_goal', 'safety', 'pick_six', 'game_end'].includes(l.eventType)
+                );
+                updatePartidoBothScores(
+                    sim.fechaId, pid, String(r.localScore), String(r.visitanteScore),
+                    r.stats, scoringPlays, r.totalPlays, r.driveCount, r.broadcastTime, r.scoreByQuarter
+                );
+                hasChanges = true;
+            });
+
+            if (hasChanges) {
+                updateLiveUI();
+            }
+        }, 100);
+
+        return () => clearInterval(ticker);
+    }, []);
+
+    const startLiveSimulation = (fechaId, partidoId, localTeam, visitanteTeam) => {
+        const result = simulateGame(
+            localTeam?.['Team Name'] || 'Local',
+            visitanteTeam?.['Team Name'] || 'Visitante',
+            true,
+            {
+                localOff: parseStarValue(localTeam?.['Offensive Stars'] || 3),
+                localDef: parseStarValue(localTeam?.['Deffensive Stars'] || 3),
+                visitOff: parseStarValue(visitanteTeam?.['Offensive Stars'] || 3),
+                visitDef: parseStarValue(visitanteTeam?.['Deffensive Stars'] || 3),
+            }
+        );
+        activeSimsRef.current[partidoId] = {
+            fechaId,
+            result,
+            currentIndex: 0,
+            speed: 1,
+            lastTickTime: Date.now()
+        };
+        updateLiveUI();
+    };
 
     // ── Auto-Simulate Headless (Background) ──
     useEffect(() => {
@@ -861,11 +958,13 @@ function Liga() {
                                                         className={`partido-card ${!showConfig ? 'clickable' : ''}`}
                                                         onClick={() => {
                                                             if (!showConfig) {
-                                                                setSimulatingPartido({
-                                                                    fechaId: fechas[selectedFechaIndex].id,
-                                                                    partidoId: partido.id,
-                                                                    readOnly: partido.localScore !== null && partido.visitanteScore !== null
-                                                                });
+                                                                if (liveMatchesUI[partido.id]) {
+                                                                    setSimulatingPartido({ fechaId: fechas[selectedFechaIndex].id, partidoId: partido.id, liveState: true });
+                                                                } else if (partido.localScore === null) {
+                                                                    setSimulatingPartido({ fechaId: fechas[selectedFechaIndex].id, partidoId: partido.id, readOnly: false });
+                                                                } else {
+                                                                    setSimulatingPartido({ fechaId: fechas[selectedFechaIndex].id, partidoId: partido.id, readOnly: true });
+                                                                }
                                                             }
                                                         }}
                                                     >
@@ -926,7 +1025,19 @@ function Liga() {
                                                                 ) : (
                                                                     /* Normal mode: display score or VS entirely dictated by click state above */
                                                                     <>
-                                                                        {partido.localScore !== null && partido.visitanteScore !== null ? (
+                                                                        {liveMatchesUI[partido.id] ? (
+                                                                            <div className="live-match-card-display">
+                                                                                <div className="live-badge-row">
+                                                                                    <span className="live-pulse"></span> <span className="live-text-badge">EN VIVO</span>
+                                                                                    <span className="live-clock"> Q{liveMatchesUI[partido.id].quarter} {Math.floor(liveMatchesUI[partido.id].clock / 60)}:{(liveMatchesUI[partido.id].clock % 60).toString().padStart(2, '0')}</span>
+                                                                                </div>
+                                                                                <div className="score-display-final">
+                                                                                    <span className="score-num">{liveMatchesUI[partido.id].localScore}</span>
+                                                                                    <span className="score-separator">-</span>
+                                                                                    <span className="score-num">{liveMatchesUI[partido.id].visitanteScore}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        ) : partido.localScore !== null && partido.visitanteScore !== null ? (
                                                                             <div className="score-display-final">
                                                                                 <span className={`score-num ${Number(partido.localScore) < Number(partido.visitanteScore) ? 'loser-score' : ''}`}>
                                                                                     {partido.localScore}
@@ -1030,12 +1141,24 @@ function Liga() {
                     scoreByQuarter: partido.scoreByQuarter || null,
                 } : null;
 
+                const liveEngine = activeSimsRef.current[simulatingPartido.partidoId];
+
                 return (
                     <GameSimulator
                         localTeam={localT}
                         visitanteTeam={visitanteT}
                         isLocalHome={true}
                         readOnlyResult={readOnlyData}
+                        liveEngine={liveEngine}
+                        onStartLive={() => startLiveSimulation(simulatingPartido.fechaId, simulatingPartido.partidoId, localT, visitanteT)}
+                        onSpeedChange={(newSpeed) => {
+                            if (liveEngine) liveEngine.speed = newSpeed;
+                        }}
+                        onSkipToEnd={() => {
+                            if (liveEngine) {
+                                liveEngine.currentIndex = liveEngine.result.log.length; // Will trigger finish next tick
+                            }
+                        }}
                         onFinish={(lScore, vScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime, scoreByQuarter) => {
                             updatePartidoBothScores(simulatingPartido.fechaId, simulatingPartido.partidoId, String(lScore), String(vScore), stats, scoringPlays, totalPlays, driveCount, broadcastTime, scoreByQuarter);
                             setSimulatingPartido(null);
