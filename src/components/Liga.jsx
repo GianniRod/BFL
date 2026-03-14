@@ -970,32 +970,34 @@ function Liga() {
                                                         }}
                                                     >
                                                         <div className="partido-row">
-                                                            {showConfig && (
-                                                                <div className="partido-reorder">
-                                                                    <button
-                                                                        className="reorder-btn"
-                                                                        disabled={partidoIdx === 0}
-                                                                        onClick={(e) => { e.stopPropagation(); movePartido(fechas[selectedFechaIndex].id, partidoIdx, -1); }}
-                                                                    >
-                                                                        ▲
-                                                                    </button>
-                                                                    <button
-                                                                        className="reorder-btn"
-                                                                        disabled={partidoIdx === totalPartidos - 1}
-                                                                        onClick={(e) => { e.stopPropagation(); movePartido(fechas[selectedFechaIndex].id, partidoIdx, 1); }}
-                                                                    >
-                                                                        ▼
-                                                                    </button>
+                                                            <div className="partido-left-side">
+                                                                {showConfig && (
+                                                                    <div className="partido-reorder">
+                                                                        <button
+                                                                            className="reorder-btn"
+                                                                            disabled={partidoIdx === 0}
+                                                                            onClick={(e) => { e.stopPropagation(); movePartido(fechas[selectedFechaIndex].id, partidoIdx, -1); }}
+                                                                        >
+                                                                            ▲
+                                                                        </button>
+                                                                        <button
+                                                                            className="reorder-btn"
+                                                                            disabled={partidoIdx === totalPartidos - 1}
+                                                                            onClick={(e) => { e.stopPropagation(); movePartido(fechas[selectedFechaIndex].id, partidoIdx, 1); }}
+                                                                        >
+                                                                            ▼
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                                <div className="partido-team local">
+                                                                    {local?.['URL PHOTO'] && (
+                                                                        <img src={local['URL PHOTO']} alt="" className="partido-logo" />
+                                                                    )}
+                                                                    <span>{local?.['Team Name'] || 'Equipo'}</span>
+                                                                    {liveMatchesUI[partido.id]?.possession === 'local' && (
+                                                                        <span className="possession-icon">🏈</span>
+                                                                    )}
                                                                 </div>
-                                                            )}
-                                                            <div className="partido-team local">
-                                                                {local?.['URL PHOTO'] && (
-                                                                    <img src={local['URL PHOTO']} alt="" className="partido-logo" />
-                                                                )}
-                                                                <span>{local?.['Team Name'] || 'Equipo'}</span>
-                                                                {liveMatchesUI[partido.id]?.possession === 'local' && (
-                                                                    <span className="possession-icon">🏈</span>
-                                                                )}
                                                             </div>
                                                             <div className="partido-center">
                                                                 {showConfig ? (
@@ -1064,21 +1066,23 @@ function Liga() {
                                                                     </>
                                                                 )}
                                                             </div>
-                                                            <div className="partido-team visitante">
-                                                                {liveMatchesUI[partido.id]?.possession === 'visitante' && (
-                                                                    <span className="possession-icon">🏈</span>
-                                                                )}
-                                                                <span>{visitante?.['Team Name'] || 'Equipo'}</span>
-                                                                {visitante?.['URL PHOTO'] && (
-                                                                    <img src={visitante['URL PHOTO']} alt="" className="partido-logo" />
-                                                                )}
+                                                            <div className="partido-right-side">
+                                                                <div className="partido-team visitante">
+                                                                    {liveMatchesUI[partido.id]?.possession === 'visitante' && (
+                                                                        <span className="possession-icon">🏈</span>
+                                                                    )}
+                                                                    <span>{visitante?.['Team Name'] || 'Equipo'}</span>
+                                                                    {visitante?.['URL PHOTO'] && (
+                                                                        <img src={visitante['URL PHOTO']} alt="" className="partido-logo" />
+                                                                    )}
+                                                                </div>
+                                                                <button
+                                                                    className="remove-partido-btn"
+                                                                    onClick={(e) => { e.stopPropagation(); removePartido(fechas[selectedFechaIndex].id, partido.id); }}
+                                                                >
+                                                                    ✕
+                                                                </button>
                                                             </div>
-                                                            <button
-                                                                className="remove-partido-btn"
-                                                                onClick={(e) => { e.stopPropagation(); removePartido(fechas[selectedFechaIndex].id, partido.id); }}
-                                                            >
-                                                                ✕
-                                                            </button>
                                                         </div>
                                                     </div>
                                                 );
