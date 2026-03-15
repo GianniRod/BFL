@@ -100,6 +100,34 @@ function MatchList() {
             });
 
             finishedMatches.forEach(({ mid, sim }) => {
+                if (!sim.finished) {
+                    sim.finished = true;
+                    const scoringPlays = sim.result.log.filter(l =>
+                        ['touchdown', 'field_goal', 'safety', 'pick_six', 'game_end'].includes(l.eventType)
+                    );
+
+                    updateMatch(mid, {
+                        localScore: sim.result.localScore,
+                        visitanteScore: sim.result.visitanteScore,
+                        stats: sim.result.stats || null,
+                        scoringPlays: scoringPlays || null,
+                        totalPlays: sim.result.totalPlays || null,
+                        driveCount: sim.result.driveCount || null,
+                        broadcastTime: sim.result.broadcastTime || null,
+                        scoreByQuarter: sim.result.scoreByQuarter || null
+                    }).catch(err => console.error("Error auto-saving fixture:", err));
+
+                    try {
+                        const saved = JSON.parse(localStorage.getItem('bfl_fixture_sims') || '{}');
+                        delete saved[mid];
+                        if (Object.keys(saved).length > 0) {
+                            localStorage.setItem('bfl_fixture_sims', JSON.stringify(saved));
+                        } else {
+                            localStorage.removeItem('bfl_fixture_sims');
+                        }
+                    } catch (e) { }
+                }
+
                 delete activeSimsRef.current[mid];
                 setSimulatingMatch(prev => {
                     if (prev && prev.matchId === mid) {
