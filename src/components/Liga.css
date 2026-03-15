@@ -1144,8 +1144,8 @@
 }
 
 .score-display-final .score-num.loser-score {
-    opacity: 0.4;
-    color: #666;
+    opacity: 0.65;
+    color: #888;
 }
 
 .score-display-final .score-separator {
