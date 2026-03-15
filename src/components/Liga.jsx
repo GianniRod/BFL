@@ -77,6 +77,9 @@ function Liga() {
                             quarter: play.quarter,
                             clock: play.gameClock,
                             possession: play.possession,
+                            down: play.down,
+                            yardsToGo: play.yardsToGo,
+                            yardLine: play.yardLine,
                             speed: sim.speed,
                             isActive: true
                         };
@@ -140,6 +143,9 @@ function Liga() {
                     quarter: play.quarter,
                     clock: play.gameClock,
                     possession: play.possession,
+                    down: play.down,
+                    yardsToGo: play.yardsToGo,
+                    yardLine: play.yardLine,
                     speed: sim.speed,
                     isActive: true
                 };
@@ -1129,6 +1135,11 @@ function Liga() {
                                                                                     <span className="score-separator">-</span>
                                                                                     <span className="score-num">{liveMatchesUI[partido.id].visitanteScore}</span>
                                                                                 </div>
+                                                                                {liveMatchesUI[partido.id].down && (
+                                                                                    <div className="live-down-distance">
+                                                                                        {['1st', '2nd', '3rd', '4th'][liveMatchesUI[partido.id].down - 1] || `${liveMatchesUI[partido.id].down}th`} & {liveMatchesUI[partido.id].yardsToGo}
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                         ) : partido.localScore !== null && partido.visitanteScore !== null ? (
                                                                             <div className="score-display-final">
