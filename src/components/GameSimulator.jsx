@@ -548,7 +548,7 @@ const EVT_ICON = {
     kickoff: 'KO', commercial: 'TV', game_end: 'FIN', missed_fg: 'NO',
 };
 
-function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose, readOnlyResult, liveEngine, onStartLive, onSpeedChange, onSkipToEnd, matchDateTime, onSimulateUntil }) {
+function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose, readOnlyResult, liveEngine, onStartLive, onSpeedChange, onSkipToEnd, matchDateTime, onSimulateUntil, onReset }) {
     const logRef = useRef(null);
     const untilTimeRef = useRef(null);
     const [oddsMode, setOddsMode] = useState('decimal');
@@ -585,6 +585,12 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
 
     const skipToEnd = () => {
         if (onSkipToEnd) onSkipToEnd();
+    };
+
+    const handleReset = () => {
+        if (window.confirm('¿Estás seguro de reiniciar el partido? Se perderá todo el progreso y volverá a estar "No jugado".')) {
+            if (onReset) onReset();
+        }
     };
 
     const handleSpeedChange = (e) => {
@@ -774,7 +780,11 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                                             />
                                         </div>
                                         <button className="sim-skip-btn" onClick={skipToEnd}>Fin</button>
+                                        <button className="sim-reset-btn" onClick={handleReset} style={{ marginLeft: '10px', background: '#e53935' }}>Reiniciar</button>
                                     </>
+                                )}
+                                {phase === 'finished' && onReset && (
+                                    <button className="sim-reset-btn" onClick={handleReset} style={{ marginLeft: '10px', background: '#e53935' }}>Reiniciar Partido</button>
                                 )}
                             </div>
                         </div>
@@ -834,6 +844,11 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                         </div>
                         {!readOnlyResult && (
                             <button className="sim-save-btn" onClick={handleSave}>Guardar Resultado</button>
+                        )}
+                        {onReset && (
+                            <button className="sim-reset-btn" onClick={handleReset} style={{ background: '#e53935', borderColor: '#b71c1c', marginTop: '10px', width: '100%', padding: '12px', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                Reiniciar Partido
+                            </button>
                         )}
                     </div>
                 )}
