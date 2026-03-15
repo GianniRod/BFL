@@ -998,7 +998,7 @@ function Liga() {
                             <p className="no-fechas">No hay fechas configuradas. Haz clic en "+ Agregar Fecha" para comenzar.</p>
                         ) : (
                             <div className="fechas-carousel">
-                                {/* Carousel Navigation */}
+                                {/* Horizontal Fecha Pills */}
                                 <div className="carousel-nav">
                                     <button
                                         className="carousel-arrow"
@@ -1008,34 +1008,17 @@ function Liga() {
                                         ‹
                                     </button>
 
-                                    <div className="fecha-selector" onClick={() => setShowFechaDropdown(!showFechaDropdown)}>
-                                        <input
-                                            type="text"
-                                            className="fecha-nombre-input"
-                                            value={fechas[selectedFechaIndex]?.nombre || ''}
-                                            onChange={(e) => updateFechaNombre(fechas[selectedFechaIndex]?.id, e.target.value)}
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                        <span className="dropdown-arrow">{showFechaDropdown ? '▲' : '▼'}</span>
-
-                                        {showFechaDropdown && (
-                                            <div className="fecha-dropdown">
-                                                {fechas.map((fecha, index) => (
-                                                    <div
-                                                        key={fecha.id}
-                                                        className={`fecha-dropdown-item ${index === selectedFechaIndex ? 'active' : ''}`}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setSelectedFechaIndex(index);
-                                                            setShowFechaDropdown(false);
-                                                        }}
-                                                    >
-                                                        {fecha.nombre}
-                                                        <span className="partidos-badge">{fecha.partidos.length}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                    <div className="fecha-pills-strip">
+                                        {fechas.map((fecha, index) => (
+                                            <button
+                                                key={fecha.id}
+                                                className={`fecha-pill ${index === selectedFechaIndex ? 'active' : ''}`}
+                                                onClick={() => setSelectedFechaIndex(index)}
+                                            >
+                                                <span className="fecha-pill-label">{fecha.nombre}</span>
+                                                <span className="fecha-pill-count">{fecha.partidos.length}</span>
+                                            </button>
+                                        ))}
                                     </div>
 
                                     <button
@@ -1044,16 +1027,6 @@ function Liga() {
                                         disabled={selectedFechaIndex === fechas.length - 1}
                                     >
                                         ›
-                                    </button>
-
-                                    <button
-                                        className="remove-fecha-btn"
-                                        onClick={() => {
-                                            removeFecha(fechas[selectedFechaIndex]?.id);
-                                            setSelectedFechaIndex(Math.max(0, selectedFechaIndex - 1));
-                                        }}
-                                    >
-                                        ✕
                                     </button>
                                 </div>
 
@@ -1190,12 +1163,14 @@ function Liga() {
                                                                         <img src={visitante['URL PHOTO']} alt="" className="partido-logo" />
                                                                     )}
                                                                 </div>
-                                                                <button
-                                                                    className="remove-partido-btn"
-                                                                    onClick={(e) => { e.stopPropagation(); removePartido(fechas[selectedFechaIndex].id, partido.id); }}
-                                                                >
-                                                                    ✕
-                                                                </button>
+                                                                {showConfig && (
+                                                                    <button
+                                                                        className="remove-partido-btn"
+                                                                        onClick={(e) => { e.stopPropagation(); removePartido(fechas[selectedFechaIndex].id, partido.id); }}
+                                                                    >
+                                                                        ✕
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1203,42 +1178,53 @@ function Liga() {
                                             })
                                         )}
 
-                                        <div className="add-partido-form">
-                                            <select id={`local-${fechas[selectedFechaIndex].id}`} defaultValue="">
-                                                <option value="" disabled>Local</option>
-                                                {leagueTeamsData.map(team => (
-                                                    <option key={team.id} value={team.id}>{team['Team Name']}</option>
-                                                ))}
-                                            </select>
-                                            <span className="vs-text">vs</span>
-                                            <select id={`visitante-${fechas[selectedFechaIndex].id}`} className="team-select">
-                                                <option value="">Visitante...</option>
-                                                {allTeams.filter(t => leagueTeams.includes(t.id)).map(team => (
-                                                    <option key={team.id} value={team.id}>{team['Team Name']}</option>
-                                                ))}
-                                            </select>
-                                            <input
-                                                type="datetime-local"
-                                                id={`datetime-${fechas[selectedFechaIndex].id}`}
-                                                className="add-partido-datetime-new"
-                                            />
-                                            <button
-                                                className="add-partido-btn"
-                                                onClick={() => {
-                                                    const localSelect = document.getElementById(`local-${fechas[selectedFechaIndex].id}`);
-                                                    const visitanteSelect = document.getElementById(`visitante-${fechas[selectedFechaIndex].id}`);
-                                                    const dateTimeInput = document.getElementById(`datetime-${fechas[selectedFechaIndex].id}`);
-                                                    if (localSelect.value && visitanteSelect.value) {
-                                                        addPartido(fechas[selectedFechaIndex].id, localSelect.value, visitanteSelect.value, dateTimeInput.value || null);
-                                                        localSelect.value = '';
-                                                        visitanteSelect.value = '';
-                                                        dateTimeInput.value = '';
-                                                    }
-                                                }}
-                                            >
-                                                + Partido
-                                            </button>
-                                        </div>
+                                        {showConfig && (
+                                            <div className="add-partido-form">
+                                                <select id={`local-${fechas[selectedFechaIndex].id}`} defaultValue="">
+                                                    <option value="" disabled>Local</option>
+                                                    {leagueTeamsData.map(team => (
+                                                        <option key={team.id} value={team.id}>{team['Team Name']}</option>
+                                                    ))}
+                                                </select>
+                                                <span className="vs-text">vs</span>
+                                                <select id={`visitante-${fechas[selectedFechaIndex].id}`} className="team-select">
+                                                    <option value="">Visitante...</option>
+                                                    {allTeams.filter(t => leagueTeams.includes(t.id)).map(team => (
+                                                        <option key={team.id} value={team.id}>{team['Team Name']}</option>
+                                                    ))}
+                                                </select>
+                                                <input
+                                                    type="datetime-local"
+                                                    id={`datetime-${fechas[selectedFechaIndex].id}`}
+                                                    className="add-partido-datetime-new"
+                                                />
+                                                <button
+                                                    className="add-partido-btn"
+                                                    onClick={() => {
+                                                        const localSelect = document.getElementById(`local-${fechas[selectedFechaIndex].id}`);
+                                                        const visitanteSelect = document.getElementById(`visitante-${fechas[selectedFechaIndex].id}`);
+                                                        const dateTimeInput = document.getElementById(`datetime-${fechas[selectedFechaIndex].id}`);
+                                                        if (localSelect.value && visitanteSelect.value) {
+                                                            addPartido(fechas[selectedFechaIndex].id, localSelect.value, visitanteSelect.value, dateTimeInput.value || null);
+                                                            localSelect.value = '';
+                                                            visitanteSelect.value = '';
+                                                            dateTimeInput.value = '';
+                                                        }
+                                                    }}
+                                                >
+                                                    + Partido
+                                                </button>
+                                                <button
+                                                    className="remove-fecha-btn-inline"
+                                                    onClick={() => {
+                                                        removeFecha(fechas[selectedFechaIndex]?.id);
+                                                        setSelectedFechaIndex(Math.max(0, selectedFechaIndex - 1));
+                                                    }}
+                                                >
+                                                    🗑️ Borrar Fecha
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
