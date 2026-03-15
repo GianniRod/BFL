@@ -1015,8 +1015,8 @@ function Liga() {
                                                 className={`fecha-pill ${index === selectedFechaIndex ? 'active' : ''}`}
                                                 onClick={() => setSelectedFechaIndex(index)}
                                             >
-                                                <span className="fecha-pill-label">{fecha.nombre}</span>
-                                                <span className="fecha-pill-count">{fecha.partidos.length}</span>
+                                                <span className="fecha-pill-label">FECHA</span>
+                                                <span className="fecha-pill-count">{index + 1}</span>
                                             </button>
                                         ))}
                                     </div>
