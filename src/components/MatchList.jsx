@@ -205,6 +205,11 @@ function MatchList() {
                                                 <span className="score-separator">-</span>
                                                 <span className="score-num">{live.visitanteScore}</span>
                                             </div>
+                                            {live.down != null && (
+                                                <div className="live-down-distance">
+                                                    {['1st', '2nd', '3rd', '4th'][live.down - 1] || `${live.down}th`} & {live.yardsToGo} | Yd {live.yardLine}
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="partido-vs-area">
