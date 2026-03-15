@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, orderBy, onSnapshot, doc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
 const TEAMS_COLLECTION = "teams";
@@ -23,6 +23,16 @@ export const addMatch = async (matchData) => {
         return docRef.id;
     } catch (e) {
         console.error("Error adding match: ", e);
+        throw e;
+    }
+};
+
+export const updateMatch = async (matchId, data) => {
+    try {
+        const docRef = doc(db, MATCHES_COLLECTION, matchId);
+        await setDoc(docRef, data, { merge: true });
+    } catch (e) {
+        console.error("Error updating match: ", e);
         throw e;
     }
 };
