@@ -64,3 +64,14 @@
     color: #777;
     margin-top: 20px;
 }
+
+/* ── Fixture Match List (reuses Liga card styles) ── */
+.fixture-match-list {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.fixture-matches-container {
+    display: flex;
+    flex-direction: column;
+}
