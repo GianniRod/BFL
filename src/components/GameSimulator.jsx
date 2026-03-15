@@ -145,11 +145,11 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
         const mult = getYardMult();
         const y = Math.round(weightedRandom([
             { value: randomBetween(-2, -1), weight: Math.max(1, 8 - adv) },
-            { value: randomBetween(0, 2), weight: 30 },
+            { value: randomBetween(0, 2), weight: 35 },
             { value: randomBetween(3, 5), weight: Math.max(1, 35 + adv) },
-            { value: randomBetween(6, 10), weight: Math.max(1, 20 + adv * 0.5) },
-            { value: randomBetween(11, 20), weight: Math.max(1, 6 + adv * 0.3) },
-            { value: randomBetween(21, 40), weight: 1 },
+            { value: randomBetween(6, 10), weight: Math.max(1, 18 + adv * 0.5) },
+            { value: randomBetween(11, 15), weight: Math.max(1, 4 + adv * 0.3) },
+            { value: randomBetween(16, 25), weight: 1 },
         ]) * mult);
         return { yards: y, desc: `Acarreo por ${y} yardas` };
     };
@@ -188,7 +188,7 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
         ]);
         if (r === 'inc') return { yards: 0, incomplete: true, desc: 'Pase profundo incompleto' };
         if (r === 'int') return { yards: 0, interception: true, desc: '¡INTERCEPCIÓN en pase profundo!' };
-        const rawY = r === 'm' ? randomBetween(15, 25) : r === 'l' ? randomBetween(25, 40) : randomBetween(40, 70);
+        const rawY = r === 'm' ? randomBetween(12, 20) : r === 'l' ? randomBetween(21, 35) : randomBetween(36, 60);
         const y = Math.round(rawY * mult);
         const prefix = r === 'd' ? '¡BOMBA! Pase profundo' : r === 'l' ? '¡Gran pase profundo' : 'Pase profundo completado';
         return { yards: y, desc: `${prefix} por ${y} yardas${r === 'l' ? '!' : ''}` };
@@ -400,10 +400,10 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
 
         // Clock consumption
         let clk;
-        if (res.incomplete || pt === 'spike') { clk = randomBetween(3, 6); broadcastTime += 22; }
-        else if (pt === 'run') { clk = randomBetween(25, 40); broadcastTime += 33; }
-        else if (pt === 'sack') { clk = randomBetween(15, 30); broadcastTime += 30; }
-        else { clk = randomBetween(15, 35); broadcastTime += 30; }
+        if (res.incomplete || pt === 'spike') { clk = randomBetween(5, 8); broadcastTime += 22; }
+        else if (pt === 'run') { clk = randomBetween(30, 48); broadcastTime += 33; }
+        else if (pt === 'sack') { clk = randomBetween(20, 35); broadcastTime += 30; }
+        else { clk = randomBetween(20, 42); broadcastTime += 30; }
 
         if (is2min()) clk = Math.min(clk, randomBetween(10, 15));
         tick(clk);
@@ -480,8 +480,8 @@ function quickSimRemainder(lScore, vScore, remainingSeconds, teamRatings, isLoca
             ? (localOff - visitDef) + (isLocalHome ? 0.25 : -0.25)
             : (visitOff - localDef) - (isLocalHome ? 0.25 : -0.25);
 
-        const tdPct = Math.max(5, Math.min(45, 19 + ventaja * 3));
-        const fgPct = 12;
+        const tdPct = Math.max(5, Math.min(45, 16 + ventaja * 3));
+        const fgPct = 10;
         const toPct = Math.max(3, Math.min(25, 10 - ventaja * 1.5));
         const driveTime = randomBetween(90, 180);
         const roll = Math.random() * 100;
