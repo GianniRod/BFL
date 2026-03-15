@@ -575,10 +575,25 @@ function Liga() {
         for (let round = 0; round < n - 1; round++) {
             const matches = [];
             for (let i = 0; i < n / 2; i++) {
-                matches.push({
-                    localId: teamsCopy[i],
-                    visitanteId: teamsCopy[n - 1 - i]
-                });
+                const teamA = teamsCopy[i];
+                const teamB = teamsCopy[n - 1 - i];
+                
+                // Alternate home/away assignment to minimize consecutive home/away games
+                // For the fixed team (0) and its opponent: alternate every round
+                if (i === 0) {
+                    if (round % 2 === 0) {
+                        matches.push({ localId: teamB, visitanteId: teamA });
+                    } else {
+                        matches.push({ localId: teamA, visitanteId: teamB });
+                    }
+                } else {
+                    // For other matches, use a parity-based assignment
+                    if (i % 2 === 0) {
+                        matches.push({ localId: teamB, visitanteId: teamA });
+                    } else {
+                        matches.push({ localId: teamA, visitanteId: teamB });
+                    }
+                }
             }
             rounds.push(matches);
 
@@ -587,13 +602,13 @@ function Liga() {
             teamsCopy.splice(1, 0, last);
         }
 
-        // Generate vuelta (swap home/away, same round order)
+        // Generate vuelta (swap home/away and REVERSE the round order to ensure smooth transition)
         const vueltaRounds = rounds.map(round =>
             round.map(match => ({
                 localId: match.visitanteId,
                 visitanteId: match.localId
             }))
-        );
+        ).reverse();
 
         const allRounds = [...rounds, ...vueltaRounds];
         const matchesPerRound = n / 2;
