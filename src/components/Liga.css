@@ -340,36 +340,90 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    padding: 16px 24px;
-    background: linear-gradient(180deg, #262a33 0%, #1a1d24 100%);
-    border-bottom: 1px solid #2a2f3a;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    gap: 8px;
+    padding: 12px 16px;
+    background: #111318;
+    border-bottom: 1px solid #1e2028;
 }
 
 .carousel-arrow {
     background: transparent;
     border: none;
-    color: #d4af37;
-    width: 40px;
-    height: 40px;
-    font-size: 2.5rem;
+    color: #666;
+    width: 32px;
+    height: 32px;
+    font-size: 1.5rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s;
+    transition: all 0.2s;
     line-height: 1;
+    flex-shrink: 0;
 }
 
 .carousel-arrow:hover:not(:disabled) {
-    color: #e5c44a;
-    transform: scale(1.2);
+    color: #aaa;
 }
 
 .carousel-arrow:disabled {
-    opacity: 0.3;
+    opacity: 0.2;
     cursor: not-allowed;
+}
+
+/* Fecha Pills Strip */
+.fecha-pills-strip {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: 600px;
+    padding: 4px 0;
+}
+
+.fecha-pills-strip::-webkit-scrollbar {
+    display: none;
+}
+
+.fecha-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 14px;
+    background: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: inherit;
+}
+
+.fecha-pill:hover {
+    color: #aaa;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.fecha-pill.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.fecha-pill-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.fecha-pill-count {
+    font-size: 1rem;
+    font-weight: 700;
 }
 
 .fecha-selector {
@@ -469,107 +523,43 @@
 
 /* Fecha Content */
 .fecha-content {
-    padding: 20px;
+    padding: 8px 0;
 }
 
-.fecha-card {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 12px;
-    overflow: hidden;
+/* ── Match Cards (reference style) ── */
+.partido-card {
+    background: #16181e;
+    border: 1px solid #1e2028;
+    border-radius: 0;
+    margin-bottom: 1px;
+    transition: background 0.2s;
 }
 
-.fecha-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
+.partido-card:first-child {
+    border-radius: 10px 10px 0 0;
+}
+
+.partido-card:last-child {
+    border-radius: 0 0 10px 10px;
+}
+
+.partido-card:only-child {
+    border-radius: 10px;
+}
+
+.partido-card.clickable {
     cursor: pointer;
-    transition: background 0.3s;
 }
 
-.fecha-header-row:hover {
-    background: #222;
-}
-
-.fecha-nombre {
-    font-weight: bold;
-    font-size: 1.2rem;
-    color: #d4af37;
-}
-
-.fecha-nombre-input {
-    font-weight: bold;
-    font-size: 1.1rem;
-    background: #222;
-    border: 1px solid #444;
-    padding: 8px 12px;
-    border-radius: 6px;
-    color: #d4af37;
-    width: 200px;
-}
-
-.fecha-actions {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.partidos-count {
-    color: #888;
-    font-size: 0.9rem;
-}
-
-.expand-icon {
-    color: #888;
-    font-size: 0.9rem;
-}
-
-.remove-fecha-btn {
-    background: transparent;
-    border: none;
-    color: #888;
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    padding: 0;
-}
-
-.remove-fecha-btn:hover {
-    background: rgba(244, 67, 54, 0.1);
-    color: #ef5350;
-    transform: scale(1.1);
-}
-
-.fecha-partidos {
-    border-top: 1px solid #333;
-    padding: 15px 20px;
-    background: #0d0d0d;
-}
-
-.no-partidos {
-    text-align: center;
-    color: #666;
-    padding: 15px;
-    margin: 0;
+.partido-card.clickable:hover {
+    background: #1c1f27;
 }
 
 .partido-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 15px;
-    background: #1a1a1a;
-    border-radius: 8px;
-    margin-bottom: 10px;
+    padding: 16px 20px;
     gap: 10px;
 }
 
@@ -606,18 +596,20 @@
 }
 
 .partido-team span {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-weight: 500;
 }
 
 .partido-logo {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
+    border: 1px solid #2a2f3a;
 }
 
 .partido-score {
@@ -654,38 +646,58 @@
 
 .live-text-badge {
     color: #ef4444;
-    font-size: 0.75rem;
-    font-weight: bold;
+    font-size: 0.7rem;
+    font-weight: 700;
     letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .possession-icon {
-    font-size: 0.95rem;
-    margin: 0 6px;
+    font-size: 0.85rem;
+    margin: 0 4px;
     vertical-align: middle;
 }
 
 .remove-partido-btn {
-    background: #b71c1c;
-    border: none;
-    color: white;
+    background: transparent;
+    border: 1px solid #444;
+    color: #888;
     width: 24px;
     height: 24px;
     min-width: 24px;
     min-height: 24px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     padding: 0;
+    transition: all 0.2s;
 }
 
 .remove-partido-btn:hover {
-    background: #c62828;
+    background: rgba(244, 67, 54, 0.15);
+    border-color: #ef5350;
+    color: #ef5350;
+}
+
+.remove-fecha-btn-inline {
+    background: rgba(244, 67, 54, 0.1);
+    border: 1px solid #5a2020;
+    color: #ef5350;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.remove-fecha-btn-inline:hover {
+    background: rgba(244, 67, 54, 0.2);
+    border-color: #ef5350;
 }
 
 .add-partido-form {
@@ -1090,17 +1102,10 @@
     cursor: not-allowed;
 }
 
-.partido-datetime {
-    font-size: 0.78rem;
-    color: #888;
-    text-align: center;
-    letter-spacing: 0.5px;
-}
-
 .datetime-edit-input {
     padding: 5px 8px;
-    background: #222;
-    border: 1px solid #444;
+    background: #1a1a1a;
+    border: 1px solid #333;
     border-radius: 6px;
     color: white;
     font-size: 0.8rem;
@@ -1114,38 +1119,80 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
 .vs-badge {
-    font-size: 1.1rem;
-    font-weight: 900;
-    color: #555;
-    letter-spacing: 3px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #444;
+    letter-spacing: 2px;
 }
 
 .score-display-final {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .score-display-final .score-num {
-    font-size: 1.4rem;
-    font-weight: 900;
-    color: #d4af37;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: white;
     font-variant-numeric: tabular-nums;
     transition: opacity 0.3s ease;
 }
 
 .score-display-final .score-num.loser-score {
-    opacity: 0.5;
-    color: #888;
+    opacity: 0.4;
+    color: #666;
 }
 
 .score-display-final .score-separator {
-    font-size: 1.1rem;
+    font-size: 1rem;
+    color: #444;
+    font-weight: 300;
+}
+
+.live-match-card-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.live-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.live-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ef4444;
+    animation: livePulse 1.5s infinite;
+}
+
+@keyframes livePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.partido-datetime {
+    font-size: 0.72rem;
     color: #555;
+    text-align: center;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
 }
 
 /* ── Mobile Responsive ── */
@@ -1210,10 +1257,27 @@
         gap: 6px;
     }
 
+    .fecha-pills-strip {
+        max-width: calc(100vw - 100px);
+        gap: 2px;
+    }
+
+    .fecha-pill {
+        padding: 4px 10px;
+    }
+
+    .fecha-pill-label {
+        font-size: 0.6rem;
+    }
+
+    .fecha-pill-count {
+        font-size: 0.85rem;
+    }
+
     .carousel-arrow {
         width: 28px;
         height: 28px;
-        font-size: 1rem;
+        font-size: 1.2rem;
     }
 
     .fecha-selector {
