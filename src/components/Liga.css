@@ -1195,6 +1195,15 @@
     margin-top: 2px;
 }
 
+.live-down-distance {
+    font-size: 0.65rem;
+    color: #888;
+    text-align: center;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-top: 1px;
+}
+
 /* ── Mobile Responsive ── */
 @media (max-width: 768px) {
     .liga-container {
