@@ -472,6 +472,29 @@ function Liga() {
         await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
 
+    const resetPartidoData = async (fechaId, partidoId) => {
+        const newFechas = fechas.map(f =>
+            f.id === fechaId ? {
+                ...f,
+                partidos: f.partidos.map(p =>
+                    p.id === partidoId ? {
+                        ...p,
+                        localScore: null,
+                        visitanteScore: null,
+                        stats: null,
+                        scoringPlays: null,
+                        totalPlays: null,
+                        driveCount: null,
+                        broadcastTime: null,
+                        scoreByQuarter: null
+                    } : p
+                )
+            } : f
+        );
+        const docRef = doc(db, 'leagueConfig', String(selectedYear));
+        await setDoc(docRef, { fechas: newFechas }, { merge: true });
+    };
+
     useEffect(() => {
         updatePartidoBothScoresRef.current = updatePartidoBothScores;
     }, [updatePartidoBothScores]);
@@ -1301,6 +1324,28 @@ function Liga() {
                             setSimulatingPartido(null);
                         }}
                         onClose={() => setSimulatingPartido(null)}
+                        onReset={async () => {
+                            // 1. Clear live simulator state
+                            if (activeSimsRef.current[simulatingPartido.partidoId]) {
+                                delete activeSimsRef.current[simulatingPartido.partidoId];
+                            }
+                            // 2. Clear localStorage
+                            try {
+                                const saved = JSON.parse(localStorage.getItem('bfl_live_sims') || '{}');
+                                delete saved[simulatingPartido.partidoId];
+                                if (Object.keys(saved).length > 0) {
+                                    localStorage.setItem('bfl_live_sims', JSON.stringify(saved));
+                                } else {
+                                    localStorage.removeItem('bfl_live_sims');
+                                }
+                            } catch (e) { /* ignore */ }
+                            // 3. Update live matches UI
+                            updateLiveUI();
+                            // 4. Update Firestore to clear all scores and data
+                            await resetPartidoData(simulatingPartido.fechaId, simulatingPartido.partidoId);
+                            // 5. Close simulator window
+                            setSimulatingPartido(null);
+                        }}
                     />
                 );
             })()}
