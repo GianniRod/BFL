@@ -272,6 +272,22 @@ function MatchList() {
                         // Fixture matches don't affect standings - just close
                         setSimulatingMatch(null);
                     }}
+                    onReset={() => {
+                        if (activeSimsRef.current[simulatingMatch.matchId]) {
+                            delete activeSimsRef.current[simulatingMatch.matchId];
+                        }
+                        try {
+                            const saved = JSON.parse(localStorage.getItem('bfl_fixture_sims') || '{}');
+                            delete saved[simulatingMatch.matchId];
+                            if (Object.keys(saved).length > 0) {
+                                localStorage.setItem('bfl_fixture_sims', JSON.stringify(saved));
+                            } else {
+                                localStorage.removeItem('bfl_fixture_sims');
+                            }
+                        } catch (e) { }
+                        updateLiveUI();
+                        setSimulatingMatch(null);
+                    }}
                 />
             )}
         </div>
