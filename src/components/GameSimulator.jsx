@@ -159,10 +159,10 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
         const mult = getYardMult();
         const intChance = Math.max(0.5, 2 + getTurnoverAdj() * 0.5);
         const r = weightedRandom([
-            { value: 'inc', weight: Math.max(1, 35 - adv) },
-            { value: 's', weight: Math.max(1, 40 + adv) },
-            { value: 'm', weight: Math.max(1, 18 + adv * 0.5) },
-            { value: 'l', weight: 5 },
+            { value: 'inc', weight: Math.max(1, 42 - adv) },
+            { value: 's', weight: Math.max(1, 35 + adv) },
+            { value: 'm', weight: Math.max(1, 15 + adv * 0.5) },
+            { value: 'l', weight: 4 },
             { value: 'int', weight: Math.max(0.5, intChance) },
         ]);
         if (r === 'inc') return { yards: 0, incomplete: true, desc: 'Pase incompleto' };
@@ -180,10 +180,10 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
         const mult = getYardMult();
         const intChance = Math.max(0.5, 3 + getTurnoverAdj() * 0.5);
         const r = weightedRandom([
-            { value: 'inc', weight: Math.max(1, 55 - adv) },
-            { value: 'm', weight: Math.max(1, 25 + adv) },
-            { value: 'l', weight: Math.max(1, 12 + adv * 0.3) },
-            { value: 'd', weight: Math.max(1, 5 + adv * 0.2) },
+            { value: 'inc', weight: Math.max(1, 62 - adv) },
+            { value: 'm', weight: Math.max(1, 20 + adv) },
+            { value: 'l', weight: Math.max(1, 10 + adv * 0.3) },
+            { value: 'd', weight: Math.max(1, 4 + adv * 0.2) },
             { value: 'int', weight: Math.max(0.5, intChance) },
         ]);
         if (r === 'inc') return { yards: 0, incomplete: true, desc: 'Pase profundo incompleto' };
@@ -311,7 +311,7 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
 
             if (dec === 'fg') {
                 const fgDist = (100 - yardLine) + 17;
-                let pct = fgDist < 30 ? 95 : fgDist <= 40 ? 90 : fgDist <= 50 ? 75 : fgDist <= 60 ? 55 : 20;
+                let pct = fgDist < 30 ? 92 : fgDist <= 40 ? 85 : fgDist <= 50 ? 70 : fgDist <= 60 ? 50 : 15;
                 totalPlays++;
                 if (chance(pct)) {
                     if (possession === 'local') { localScore += 3; scoreByQuarter.local[safeQ()] += 3; } else { visitanteScore += 3; scoreByQuarter.visitante[safeQ()] += 3; }
@@ -480,8 +480,8 @@ function quickSimRemainder(lScore, vScore, remainingSeconds, teamRatings, isLoca
             ? (localOff - visitDef) + (isLocalHome ? 0.25 : -0.25)
             : (visitOff - localDef) - (isLocalHome ? 0.25 : -0.25);
 
-        const tdPct = Math.max(5, Math.min(45, 22 + ventaja * 3));
-        const fgPct = 15;
+        const tdPct = Math.max(5, Math.min(45, 19 + ventaja * 3));
+        const fgPct = 12;
         const toPct = Math.max(3, Math.min(25, 10 - ventaja * 1.5));
         const driveTime = randomBetween(90, 180);
         const roll = Math.random() * 100;
