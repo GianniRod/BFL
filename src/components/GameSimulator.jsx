@@ -668,7 +668,25 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
 
     // Get current odds from pre-computed timeline
     const playIdx = visiblePlays.length - 1;
-    const currentOdds = result?.oddsTimeline?.[playIdx] || { local: 50, visit: 50 };
+    let currentOdds = { local: 50, visit: 50 };
+
+    if (result?.oddsTimeline?.[playIdx]) {
+        currentOdds = result.oddsTimeline[playIdx];
+    } else if (phase === 'idle') {
+        const parseStarObj = (val) => {
+            if (!val) return 3;
+            const s = String(val).replace(',', '.');
+            return parseFloat(s) || 3;
+        };
+        const localOff = parseStarObj(localTeam?.['Offensive Stars']);
+        const localDef = parseStarObj(localTeam?.['Deffensive Stars']);
+        const visitOff = parseStarObj(visitanteTeam?.['Offensive Stars']);
+        const visitDef = parseStarObj(visitanteTeam?.['Deffensive Stars']);
+        const baseWinProbLocal = 50 + (localOff - visitDef) * 5 + (localDef - visitOff) * 5 + (isLocalHome ? 3 : 0);
+        const clampProb = (p) => Math.max(5, Math.min(95, p));
+        const localProb = clampProb(baseWinProbLocal);
+        currentOdds = { local: localProb, visit: 100 - localProb };
+    }
 
     return (
         <div className="sim-overlay" onClick={onClose}>
@@ -718,25 +736,23 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                 )}
 
                 {/* Live Odds Bar */}
-                {phase !== 'idle' && (
-                    <div className="sim-odds-bar">
-                        <div className="sim-odds-values">
-                            <span className="sim-odds-local">
-                                {oddsMode === 'decimal' ? toDecimalOdds(currentOdds.local) : `${currentOdds.local}%`}
-                            </span>
-                            <button className="sim-odds-toggle" onClick={() => setOddsMode(m => m === 'decimal' ? 'pct' : 'decimal')}>
-                                {oddsMode === 'decimal' ? '📊 Cuotas' : '% Prob.'}
-                            </button>
-                            <span className="sim-odds-visit">
-                                {oddsMode === 'decimal' ? toDecimalOdds(currentOdds.visit) : `${currentOdds.visit}%`}
-                            </span>
-                        </div>
-                        <div className="sim-odds-track">
-                            <div className="sim-odds-fill-local" style={{ width: `${currentOdds.local}%` }} />
-                            <div className="sim-odds-fill-visit" style={{ width: `${currentOdds.visit}%` }} />
-                        </div>
+                <div className="sim-odds-bar">
+                    <div className="sim-odds-values">
+                        <span className="sim-odds-local">
+                            {oddsMode === 'decimal' ? toDecimalOdds(currentOdds.local) : `${currentOdds.local}%`}
+                        </span>
+                        <button className="sim-odds-toggle" onClick={() => setOddsMode(m => m === 'decimal' ? 'pct' : 'decimal')}>
+                            {oddsMode === 'decimal' ? '📊 Cuotas' : '% Prob.'}
+                        </button>
+                        <span className="sim-odds-visit">
+                            {oddsMode === 'decimal' ? toDecimalOdds(currentOdds.visit) : `${currentOdds.visit}%`}
+                        </span>
                     </div>
-                )}
+                    <div className="sim-odds-track">
+                        <div className="sim-odds-fill-local" style={{ width: `${currentOdds.local}%` }} />
+                        <div className="sim-odds-fill-visit" style={{ width: `${currentOdds.visit}%` }} />
+                    </div>
+                </div>
 
                 {/* Idle */}
                 {phase === 'idle' && (
