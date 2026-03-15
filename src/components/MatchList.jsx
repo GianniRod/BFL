@@ -1,6 +1,6 @@
 
 import { useEffect, useState, useRef } from 'react';
-import { subscribeToMatches, subscribeToTeams } from '../services/db';
+import { subscribeToMatches, subscribeToTeams, updateMatch } from '../services/db';
 import GameSimulator, { simulateGame } from './GameSimulator';
 import './Fixture.css';
 import './Liga.css';
@@ -176,6 +176,8 @@ function MatchList() {
                             onClick={() => {
                                 if (live) {
                                     setSimulatingMatch({ matchId: match.id, liveState: true });
+                                } else if (match.localScore !== null && match.localScore !== undefined) {
+                                    setSimulatingMatch({ matchId: match.id, readOnly: true });
                                 } else {
                                     setSimulatingMatch({ matchId: match.id, readOnly: false });
                                 }
@@ -211,6 +213,26 @@ function MatchList() {
                                                 </div>
                                             )}
                                         </div>
+                                    ) : match.localScore !== null && match.visitanteScore !== null && match.localScore !== undefined ? (
+                                        <div className="score-display-final">
+                                            <span className={`score-num ${Number(match.localScore) < Number(match.visitanteScore) ? 'loser-score' : ''}`}>
+                                                {match.localScore}
+                                            </span>
+                                            <span className="score-separator">-</span>
+                                            <span className={`score-num ${Number(match.visitanteScore) < Number(match.localScore) ? 'loser-score' : ''}`}>
+                                                {match.visitanteScore}
+                                            </span>
+                                        </div>
+                                    ) : match.localScore !== null && match.visitanteScore !== null && match.localScore !== undefined ? (
+                                        <div className="score-display-final">
+                                            <span className={`score-num ${Number(match.localScore) < Number(match.visitanteScore) ? 'loser-score' : ''}`}>
+                                                {match.localScore}
+                                            </span>
+                                            <span className="score-separator">-</span>
+                                            <span className={`score-num ${Number(match.visitanteScore) < Number(match.localScore) ? 'loser-score' : ''}`}>
+                                                {match.visitanteScore}
+                                            </span>
+                                        </div>
                                     ) : (
                                         <div className="partido-vs-area">
                                             <span className="vs-badge">VS</span>
@@ -245,7 +267,7 @@ function MatchList() {
                     localTeam={localTeam}
                     visitanteTeam={visitanteTeam}
                     isLocalHome={true}
-                    readOnlyResult={simulatingMatch.readOnly ? (liveEngine?.result || null) : null}
+                    readOnlyResult={simulatingMatch.readOnly ? currentMatch : null}
                     liveEngine={simulatingMatch.liveState ? liveEngine : null}
                     matchDateTime={currentMatch?.date || null}
                     onClose={() => setSimulatingMatch(null)}
@@ -273,11 +295,20 @@ function MatchList() {
                             engine.targetIndex = targetIdx;
                         }
                     }}
-                    onFinish={() => {
-                        // Fixture matches don't affect standings - just close
+                    onFinish={async (lScore, vScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime, scoreByQuarter) => {
+                        await updateMatch(simulatingMatch.matchId, {
+                            localScore: lScore,
+                            visitanteScore: vScore,
+                            stats: stats || null,
+                            scoringPlays: scoringPlays || null,
+                            totalPlays: totalPlays || null,
+                            driveCount: driveCount || null,
+                            broadcastTime: broadcastTime || null,
+                            scoreByQuarter: scoreByQuarter || null
+                        });
                         setSimulatingMatch(null);
                     }}
-                    onReset={() => {
+                    onReset={async () => {
                         if (activeSimsRef.current[simulatingMatch.matchId]) {
                             delete activeSimsRef.current[simulatingMatch.matchId];
                         }
@@ -291,6 +322,17 @@ function MatchList() {
                             }
                         } catch (e) { }
                         updateLiveUI();
+
+                        await updateMatch(simulatingMatch.matchId, {
+                            localScore: null,
+                            visitanteScore: null,
+                            stats: null,
+                            scoringPlays: null,
+                            totalPlays: null,
+                            driveCount: null,
+                            broadcastTime: null,
+                            scoreByQuarter: null
+                        });
                         setSimulatingMatch(null);
                     }}
                 />
