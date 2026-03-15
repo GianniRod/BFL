@@ -75,6 +75,14 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
 
     const safeQ = () => Math.min(quarter, 3);
 
+    const ordDown = (d) => {
+        if (d === 1) return '1st';
+        if (d === 2) return '2nd';
+        if (d === 3) return '3rd';
+        if (d === 4) return '4th';
+        return `${d}th`;
+    };
+
     const push = (entry) => {
         log.push({
             ...entry,
@@ -83,7 +91,10 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
             localScore,
             visitanteScore,
             broadcastTime,
-            possession
+            possession,
+            down: entry.down != null ? entry.down : down,
+            yardsToGo: entry.yardsToGo != null ? entry.yardsToGo : yardsToGo,
+            yardLine: entry.yardLine != null ? entry.yardLine : yardLine
         });
     };
 
@@ -489,6 +500,14 @@ function quickSimRemainder(lScore, vScore, remainingSeconds, teamRatings, isLoca
 }
 
 // ── Format helpers ──
+const ordinalDown = (d) => {
+    if (d === 1) return '1st';
+    if (d === 2) return '2nd';
+    if (d === 3) return '3rd';
+    if (d === 4) return '4th';
+    return `${d}th`;
+};
+
 const fmtClock = (s) => {
     if (s == null || s < 0) s = 0;
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -765,8 +784,8 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                                     <span className="sim-play-icon">{EVT_ICON[play.eventType] || '▸'}</span>
                                     <div className="sim-play-content">
                                         <div className="sim-play-desc">{play.desc}</div>
-                                        {play.down != null && (
-                                            <div className="sim-play-meta">{play.down}° down &amp; {play.yardsToGo} | Yd {play.yardLine}</div>
+                                        {play.down != null && play.eventType !== 'commercial' && play.eventType !== 'halftime' && play.eventType !== 'quarter_end' && play.eventType !== 'game_end' && play.eventType !== 'two_min' && (
+                                            <div className="sim-play-meta">{ordinalDown(play.down)} & {play.yardsToGo} | Yd {play.yardLine}</div>
                                         )}
                                     </div>
                                     <div className="sim-play-clock">Q{play.quarter} {fmtClock(play.gameClock)}</div>
