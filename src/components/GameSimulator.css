@@ -272,6 +272,8 @@
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .sim-speed-control,
@@ -347,7 +349,8 @@
 }
 
 .sim-speed-btn,
-.sim-skip-btn {
+.sim-skip-btn,
+.sim-reset-btn {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid #2a2f3a;
     color: #aaa;
@@ -360,7 +363,8 @@
 }
 
 .sim-speed-btn:hover,
-.sim-skip-btn:hover {
+.sim-skip-btn:hover,
+.sim-reset-btn:hover {
     background: rgba(255, 255, 255, 0.12);
     color: white;
 }
