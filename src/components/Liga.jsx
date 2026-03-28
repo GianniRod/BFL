@@ -35,6 +35,10 @@ function Liga() {
     const activeSimsRef = useRef({});
     const [liveMatchesUI, setLiveMatchesUI] = useState({});
 
+    // Ref to always have the latest fechas (prevents stale closure bugs)
+    const fechasRef = useRef([]);
+    const fechasLoadedRef = useRef(false);
+
     // Restore live simulations from localStorage on mount
     useEffect(() => {
         try {
@@ -103,23 +107,34 @@ function Liga() {
 
     // Subscribe to league config for selected year
     useEffect(() => {
+        fechasLoadedRef.current = false;
         const docRef = doc(db, 'leagueConfig', String(selectedYear));
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 setLeagueTeams(data.teamIds || []);
                 setStandings(data.standings || []);
-                setFechas(data.fechas || []);
+                const loadedFechas = data.fechas || [];
+                setFechas(loadedFechas);
+                fechasRef.current = loadedFechas;
+                fechasLoadedRef.current = true;
                 setPositionLabels(data.positionLabels || []);
             } else {
                 setLeagueTeams([]);
                 setStandings([]);
                 setFechas([]);
+                fechasRef.current = [];
+                fechasLoadedRef.current = true;
                 setPositionLabels([]);
             }
         });
         return () => unsubscribe();
     }, [selectedYear]);
+
+    // Keep fechasRef always in sync with state
+    useEffect(() => {
+        fechasRef.current = fechas;
+    }, [fechas]);
 
     // Keep a fresh reference to updatePartidoBothScores to avoid stale closures in setInterval
     const updatePartidoBothScoresRef = useRef(null);
@@ -388,24 +403,38 @@ function Liga() {
     // ── Fechas (match days) Management ──
 
     const addFecha = async () => {
+        const currentFechas = fechasRef.current;
         const newFecha = {
             id: Date.now(),
-            nombre: `Fecha ${fechas.length + 1}`,
+            nombre: `Fecha ${currentFechas.length + 1}`,
             partidos: []
         };
-        const newFechas = [...fechas, newFecha];
+        const newFechas = [...currentFechas, newFecha];
         const docRef = doc(db, 'leagueConfig', String(selectedYear));
         await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
 
     const removeFecha = async (fechaId) => {
-        const newFechas = fechas.filter(f => f.id !== fechaId);
+        const currentFechas = fechasRef.current;
+        const fecha = currentFechas.find(f => f.id === fechaId);
+        // Check if fecha has matches with results
+        const hasResults = fecha?.partidos?.some(p => p.localScore !== null && p.visitanteScore !== null);
+        if (hasResults) {
+            if (!window.confirm('⚠️ Esta fecha tiene partidos con resultados. ¿Estás seguro de que querés borrarla? Los datos se perderán.')) {
+                return;
+            }
+        } else if (fecha?.partidos?.length > 0) {
+            if (!window.confirm('Esta fecha tiene partidos programados. ¿Borrarla?')) {
+                return;
+            }
+        }
+        const newFechas = currentFechas.filter(f => f.id !== fechaId);
         const docRef = doc(db, 'leagueConfig', String(selectedYear));
         await setDoc(docRef, { fechas: newFechas }, { merge: true });
     };
 
     const updateFechaNombre = async (fechaId, nombre) => {
-        const newFechas = fechas.map(f =>
+        const newFechas = fechasRef.current.map(f =>
             f.id === fechaId ? { ...f, nombre } : f
         );
         const docRef = doc(db, 'leagueConfig', String(selectedYear));
@@ -421,7 +450,7 @@ function Liga() {
             visitanteScore: null,
             dateTime
         };
-        const newFechas = fechas.map(f =>
+        const newFechas = fechasRef.current.map(f =>
             f.id === fechaId ? { ...f, partidos: [...f.partidos, newPartido] } : f
         );
         const docRef = doc(db, 'leagueConfig', String(selectedYear));
@@ -429,7 +458,15 @@ function Liga() {
     };
 
     const removePartido = async (fechaId, partidoId) => {
-        const newFechas = fechas.map(f =>
+        const currentFechas = fechasRef.current;
+        const fecha = currentFechas.find(f => f.id === fechaId);
+        const partido = fecha?.partidos?.find(p => p.id === partidoId);
+        if (partido?.localScore !== null && partido?.localScore !== undefined) {
+            if (!window.confirm('Este partido tiene resultado. ¿Estás seguro de borrarlo?')) {
+                return;
+            }
+        }
+        const newFechas = currentFechas.map(f =>
             f.id === fechaId ? { ...f, partidos: f.partidos.filter(p => p.id !== partidoId) } : f
         );
         const docRef = doc(db, 'leagueConfig', String(selectedYear));
@@ -437,7 +474,7 @@ function Liga() {
     };
 
     const updatePartidoScore = async (fechaId, partidoId, field, value) => {
-        const newFechas = fechas.map(f =>
+        const newFechas = fechasRef.current.map(f =>
             f.id === fechaId ? {
                 ...f,
                 partidos: f.partidos.map(p =>
@@ -450,7 +487,18 @@ function Liga() {
     };
 
     const updatePartidoBothScores = async (fechaId, partidoId, localScore, visitanteScore, stats, scoringPlays, totalPlays, driveCount, broadcastTime, scoreByQuarter) => {
-        const newFechas = fechas.map(f =>
+        const currentFechas = fechasRef.current;
+        // SAFETY GUARD: Never write if data hasn't loaded yet
+        if (!fechasLoadedRef.current || currentFechas.length === 0) {
+            console.warn('[BFL] updatePartidoBothScores aborted: fechas not loaded yet');
+            return;
+        }
+        // SAFETY GUARD: Verify the target fecha exists
+        if (!currentFechas.find(f => f.id === fechaId)) {
+            console.warn('[BFL] updatePartidoBothScores aborted: fechaId not found in current data');
+            return;
+        }
+        const newFechas = currentFechas.map(f =>
             f.id === fechaId ? {
                 ...f,
                 partidos: f.partidos.map(p =>
@@ -473,7 +521,15 @@ function Liga() {
     };
 
     const resetPartidoData = async (fechaId, partidoId) => {
-        const newFechas = fechas.map(f =>
+        if (!window.confirm('¿Estás seguro de resetear este partido? Se borrarán los scores y estadísticas.')) {
+            return;
+        }
+        const currentFechas = fechasRef.current;
+        if (!fechasLoadedRef.current || currentFechas.length === 0) {
+            console.warn('[BFL] resetPartidoData aborted: fechas not loaded yet');
+            return;
+        }
+        const newFechas = currentFechas.map(f =>
             f.id === fechaId ? {
                 ...f,
                 partidos: f.partidos.map(p =>
@@ -500,7 +556,7 @@ function Liga() {
     }, [updatePartidoBothScores]);
 
     const updatePartidoDateTime = async (fechaId, partidoId, dateTime) => {
-        const newFechas = fechas.map(f =>
+        const newFechas = fechasRef.current.map(f =>
             f.id === fechaId ? {
                 ...f,
                 partidos: f.partidos.map(p =>
@@ -513,7 +569,7 @@ function Liga() {
     };
 
     const movePartido = async (fechaId, partidoIndex, direction) => {
-        const newFechas = fechas.map(f => {
+        const newFechas = fechasRef.current.map(f => {
             if (f.id !== fechaId) return f;
             const newPartidos = [...f.partidos];
             const newIndex = partidoIndex + direction;
@@ -553,6 +609,20 @@ function Liga() {
 
     const generateCalendar = async () => {
         if (!calendarStartDate) return;
+
+        // Safety: confirm if there are existing fechas with results
+        const currentFechas = fechasRef.current;
+        const hasAnyResults = currentFechas.some(f => f.partidos?.some(p => p.localScore !== null && p.visitanteScore !== null));
+        if (hasAnyResults) {
+            const userConfirm = window.prompt('⚠️ ATENCIÓN: Hay partidos con resultados que se perderán.\nEscribí "CONFIRMAR" para continuar:');
+            if (userConfirm !== 'CONFIRMAR') {
+                return;
+            }
+        } else if (currentFechas.length > 0) {
+            if (!window.confirm(`Se reemplazarán las ${currentFechas.length} fechas existentes. ¿Continuar?`)) {
+                return;
+            }
+        }
 
         const teams = [...leagueTeams];
         const n = teams.length;
