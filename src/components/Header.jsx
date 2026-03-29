@@ -11,6 +11,7 @@ function Header() {
                 <Link to="/fixture">Fixture</Link>
                 <Link to="/palmares">Palmares</Link>
                 <Link to="/liga">Liga</Link>
+                <Link to="/cup">Cup</Link>
             </nav>
         </header>
     );
