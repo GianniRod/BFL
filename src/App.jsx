@@ -6,6 +6,7 @@ import FixtureBuilder from './components/FixtureBuilder';
 import MatchList from './components/MatchList';
 import Palmares from './components/Palmares';
 import Liga from './components/Liga';
+import Cup from './components/Cup';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             } />
             <Route path="/palmares" element={<Palmares />} />
             <Route path="/liga" element={<Liga />} />
+            <Route path="/cup" element={<Cup />} />
           </Routes>
         </main>
       </div>
