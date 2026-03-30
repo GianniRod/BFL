@@ -1,26 +1,25 @@
 /* ═══════════════════════════════════════════════════════════════
    CUP – Knockout Tournament Styles
+   Reuses Liga.css card styles. Only cup-specific additions here.
    ═══════════════════════════════════════════════════════════════ */
 
 .cup-container {
     max-width: 900px;
     margin: 0 auto;
     padding: 20px 10px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #e0e0e0;
 }
 
 .cup-title {
     text-align: center;
-    font-size: 2rem;
-    font-weight: 800;
+    font-size: 2.5rem;
+    margin-bottom: 5px;
     background: linear-gradient(135deg, #ffd700, #ff8c00);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 5px;
     text-transform: uppercase;
     letter-spacing: 2px;
+    font-weight: 800;
 }
 
 .cup-subtitle {
@@ -30,448 +29,269 @@
     margin-bottom: 20px;
 }
 
-/* ── Year Selector ── */
+/* ── Year Selector (matches Liga) ── */
 .cup-year-selector {
     display: flex;
     align-items: center;
-    gap: 12px;
     justify-content: center;
-    margin-bottom: 20px;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
 }
 
 .cup-year-selector label {
-    color: #aaa;
-    font-size: 0.9rem;
+    font-weight: bold;
 }
 
 .cup-year-selector select {
-    background: #1a1a2e;
-    color: #e0e0e0;
-    border: 1px solid #333;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: white;
     border-radius: 8px;
-    padding: 6px 14px;
-    font-size: 0.95rem;
-    cursor: pointer;
 }
 
 .cup-config-btn {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 1px solid #333;
-    color: #ccc;
-    padding: 8px 16px;
+    background: #333;
+    border: 1px solid #555;
+    padding: 10px 20px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
+    transition: all 0.3s;
+    color: inherit;
 }
 
 .cup-config-btn:hover {
-    border-color: #ffd700;
-    color: #ffd700;
+    background: #444;
+    border-color: #777;
 }
 
-/* ── Phase Tabs ── */
-.cup-phase-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-}
-
-.cup-phase-tab {
-    background: #1a1a2e;
+/* ── Phase Carousel (matches Liga's fecha carousel) ── */
+.cup-carousel {
+    background: #1a1a1a;
     border: 1px solid #333;
-    color: #888;
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    transition: all 0.25s ease;
-    position: relative;
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.cup-phase-tab::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 2px;
-    background: #ffd700;
-    transition: width 0.25s;
+.cup-carousel-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #111318;
+    border-bottom: 1px solid #1e2028;
 }
 
-.cup-phase-tab:hover {
-    border-color: #555;
-    color: #ccc;
+.cup-phase-pills-strip {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px 0;
 }
 
-.cup-phase-tab.active {
-    background: linear-gradient(135deg, #1a1a2e, #1e293b);
-    border-color: #ffd700;
-    color: #ffd700;
+.cup-phase-pills-strip::-webkit-scrollbar {
+    display: none;
 }
 
-.cup-phase-tab.active::after {
-    width: 60%;
-}
-
-.cup-phase-tab .tab-count {
-    display: inline-block;
-    background: rgba(255, 215, 0, 0.15);
-    color: #ffd700;
-    font-size: 0.7rem;
-    padding: 2px 6px;
+.cup-phase-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 14px;
+    background: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
     border-radius: 8px;
-    margin-left: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: inherit;
 }
 
-.cup-phase-tab.completed {
-    border-color: #4caf50;
+.cup-phase-pill:hover {
+    color: #aaa;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.cup-phase-pill.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.cup-phase-pill.completed {
     color: #4caf50;
 }
 
-/* ── Matchup Cards ── */
-.cup-matchups-container {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+.cup-phase-pill .pill-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.cup-matchup-card {
-    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
-    border: 1px solid #2a2a3e;
-    border-radius: 14px;
-    padding: 16px;
-    transition: all 0.25s ease;
+.cup-phase-pill .pill-count {
+    font-size: 1rem;
+    font-weight: 700;
 }
 
-.cup-matchup-card:hover {
-    border-color: #444;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+.cup-phase-pill .pill-count-badge {
+    font-size: 0.65rem;
+    color: #888;
+    margin-top: 1px;
 }
 
-.cup-matchup-card.bye-card {
-    opacity: 0.55;
-    border-style: dashed;
+/* ── Matchup Section ── */
+.cup-matchup-section {
+    margin-bottom: 24px;
 }
 
-.cup-matchup-card.winner-decided {
-    border-color: #ffd70040;
-}
-
-.cup-matchup-header {
+.cup-matchup-header-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #222;
+    padding: 10px 20px;
+    background: #111318;
+    border-bottom: 1px solid #1e2028;
 }
 
-.cup-matchup-number {
-    font-size: 0.75rem;
-    color: #666;
+.cup-matchup-label {
+    font-size: 0.72rem;
+    color: #555;
     text-transform: uppercase;
     letter-spacing: 1px;
-}
-
-.cup-matchup-teams {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 0.95rem;
     font-weight: 600;
 }
 
-.cup-matchup-team {
+.cup-matchup-badge {
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
-.cup-matchup-team.winner-team {
+.cup-matchup-badge .winner-text {
+    font-size: 0.72rem;
     color: #ffd700;
+    font-weight: 600;
 }
 
-.cup-matchup-team.loser-team {
-    opacity: 0.5;
-}
-
-.cup-matchup-team img {
-    width: 22px;
-    height: 22px;
+.cup-matchup-badge .winner-text img {
+    width: 16px;
+    height: 16px;
     object-fit: contain;
+    vertical-align: middle;
+    margin-right: 4px;
 }
 
-.cup-matchup-vs {
-    color: #555;
-    font-size: 0.8rem;
-    font-weight: 400;
-}
-
-.cup-bye-badge {
-    background: rgba(76, 175, 80, 0.15);
-    color: #4caf50;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-}
-
-.cup-winner-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: rgba(255, 215, 0, 0.1);
-    color: #ffd700;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.cup-aggregate {
-    font-size: 0.8rem;
-    color: #888;
+.cup-aggregate-bar {
     text-align: center;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #1a1a2e;
+    padding: 6px 12px;
+    background: #0d0d12;
+    border-top: 1px solid #1e2028;
+    font-size: 0.75rem;
+    color: #666;
 }
 
-.cup-aggregate strong {
-    color: #ffd700;
+.cup-aggregate-bar strong {
+    color: #d4af37;
+    font-weight: 700;
 }
 
-/* ── Leg Cards (IDA / VUELTA) ── */
-.cup-legs-container {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.cup-leg-card {
-    flex: 1;
-    background: #111122;
-    border: 1px solid #252540;
-    border-radius: 10px;
-    padding: 10px 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.cup-leg-card:hover {
-    border-color: #4a4a6a;
-    background: #151530;
+.cup-bye-text {
+    text-align: center;
+    padding: 16px 20px;
+    color: #4caf50;
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
 .cup-leg-label {
-    font-size: 0.65rem;
-    color: #666;
+    font-size: 0.6rem;
+    color: #555;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     font-weight: 700;
-    margin-bottom: 6px;
-}
-
-.cup-leg-teams {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-}
-
-.cup-leg-team {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.82rem;
-    flex: 1;
-}
-
-.cup-leg-team img {
-    width: 18px;
-    height: 18px;
-    object-fit: contain;
-}
-
-.cup-leg-team.local-team::after {
-    content: '(L)';
-    font-size: 0.6rem;
-    color: #ffd700;
-    margin-left: 2px;
-}
-
-.cup-leg-score {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 60px;
-    justify-content: center;
-}
-
-.cup-leg-score .score-num {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #e0e0e0;
-    min-width: 20px;
     text-align: center;
+    padding: 4px 0 0;
+    margin-bottom: -8px;
 }
 
-.cup-leg-score .score-num.loser-score {
-    opacity: 0.45;
-}
-
-.cup-leg-score .score-sep {
-    color: #555;
-    font-weight: 300;
-}
-
-.cup-leg-vs {
-    font-size: 0.85rem;
-    color: #555;
-    font-weight: 700;
-    min-width: 60px;
-    text-align: center;
-}
-
-.cup-leg-datetime {
-    font-size: 0.7rem;
-    color: #666;
-    margin-top: 4px;
-    text-align: center;
-}
-
-/* ── Live Badge inside cup ── */
-.cup-live-badge {
+/* ── Add Matchup Form (matches Liga's add-partido-form) ── */
+.cup-add-form {
     display: flex;
     align-items: center;
-    gap: 4px;
-    justify-content: center;
-}
-
-.cup-live-pulse {
-    width: 6px;
-    height: 6px;
-    background: #ff4444;
-    border-radius: 50%;
-    animation: cupPulse 1s ease-in-out infinite;
-}
-
-@keyframes cupPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-}
-
-.cup-live-text {
-    font-size: 0.65rem;
-    color: #ff6666;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* ── Config Panel ── */
-.cup-config-panel {
-    background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 20px;
-}
-
-.cup-config-panel h3 {
-    color: #ffd700;
-    font-size: 1rem;
-    margin-bottom: 12px;
-}
-
-/* ── Add Matchup Form ── */
-.cup-add-matchup-form {
-    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 15px 20px;
+    border-top: 1px solid #333;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin-top: 14px;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px dashed #333;
-    border-radius: 10px;
+    background: #111318;
+    border-radius: 0 0 12px 12px;
 }
 
-.cup-add-matchup-form select {
-    background: #1a1a2e;
-    color: #e0e0e0;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 0.85rem;
-    cursor: pointer;
+.cup-add-form select {
     flex: 1;
     min-width: 120px;
-}
-
-.cup-add-matchup-form .vs-text {
-    color: #555;
-    font-weight: 700;
-}
-
-.cup-add-matchup-btn {
-    background: linear-gradient(135deg, #ffd700, #ff8c00);
-    color: #000;
-    border: none;
-    padding: 8px 18px;
+    padding: 10px;
+    background: #222;
+    border: 1px solid #444;
     border-radius: 8px;
-    font-weight: 700;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
+    color: white;
+    font-size: 0.9rem;
 }
 
-.cup-add-matchup-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+.cup-add-form .vs-text {
+    color: #888;
+    font-weight: bold;
+}
+
+.cup-add-btn {
+    background: #1b5e20;
+    border: 1px solid #4caf50;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.cup-add-btn:hover {
+    background: #2e7d32;
 }
 
 .cup-remove-matchup-btn {
-    background: none;
-    border: 1px solid #e53935;
-    color: #e53935;
-    width: 28px;
-    height: 28px;
+    background: transparent;
+    border: 1px solid #444;
+    color: #888;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
     flex-shrink: 0;
+    padding: 0;
+    transition: all 0.2s;
 }
 
 .cup-remove-matchup-btn:hover {
-    background: #e53935;
-    color: white;
-}
-
-/* ── Edit DateTime inline ── */
-.cup-datetime-edit {
-    background: #111;
-    color: #ccc;
-    border: 1px solid #333;
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 0.75rem;
-    width: 100%;
-    margin-top: 4px;
+    background: rgba(244, 67, 54, 0.15);
+    border-color: #ef5350;
+    color: #ef5350;
 }
 
 /* ── Empty State ── */
@@ -485,11 +305,6 @@
     font-size: 3rem;
     margin-bottom: 10px;
     display: block;
-}
-
-.cup-empty-state p {
-    font-size: 0.9rem;
-    line-height: 1.6;
 }
 
 /* ── Champion Banner ── */
@@ -540,24 +355,11 @@
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
-    .cup-legs-container {
+    .cup-add-form {
         flex-direction: column;
     }
 
-    .cup-matchup-teams {
-        font-size: 0.85rem;
-    }
-
-    .cup-phase-tab {
-        padding: 8px 14px;
-        font-size: 0.75rem;
-    }
-
-    .cup-add-matchup-form {
-        flex-direction: column;
-    }
-
-    .cup-add-matchup-form select {
+    .cup-add-form select {
         width: 100%;
     }
 }
