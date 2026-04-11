@@ -296,62 +296,7 @@ function Liga() {
         updateLiveUI();
     };
 
-    // ── Auto-Simulate Headless (Background) ──
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            const now = new Date();
 
-            fechas.forEach(fecha => {
-                fecha.partidos.forEach(partido => {
-                    // Solo simular si tiene fecha programada menor o igual a AHORA, y los scores son nulos
-                    if (partido.dateTime && partido.localScore === null && partido.visitanteScore === null) {
-                        const matchDate = new Date(partido.dateTime);
-                        if (matchDate <= now) {
-                            const localT = allTeams.find(t => t.id === partido.localId);
-                            const visitanteT = allTeams.find(t => t.id === partido.visitanteId);
-
-                            if (localT && visitanteT) {
-                                console.log(`[BFL Auto-Sim] Ejecutando: ${localT['Team Name']} vs ${visitanteT['Team Name']}`);
-
-                                // Simular offline toda la partida al instante
-                                const result = simulateGame(
-                                    localT['Team Name'] || 'Local',
-                                    visitanteT['Team Name'] || 'Visitante',
-                                    true, // isLocalHome
-                                    {
-                                        localOff: parseStarValue(localT['Offensive Stars'] || 3),
-                                        localDef: parseStarValue(localT['Deffensive Stars'] || 3),
-                                        visitOff: parseStarValue(visitanteT['Offensive Stars'] || 3),
-                                        visitDef: parseStarValue(visitanteT['Deffensive Stars'] || 3),
-                                    }
-                                );
-
-                                const scoringPlays = result.log.filter(l =>
-                                    ['touchdown', 'field_goal', 'safety', 'pick_six', 'game_end'].includes(l.eventType)
-                                );
-
-                                // Guardar el resultado en la misma DB
-                                updatePartidoBothScores(
-                                    fecha.id,
-                                    partido.id,
-                                    String(result.localScore),
-                                    String(result.visitanteScore),
-                                    result.stats,
-                                    scoringPlays,
-                                    result.totalPlays,
-                                    result.driveCount,
-                                    result.broadcastTime,
-                                    result.scoreByQuarter
-                                );
-                            }
-                        }
-                    }
-                });
-            });
-        }, 15000); // Chequear cada 15 segundos
-
-        return () => clearInterval(intervalId);
-    }, [fechas, allTeams]);
 
     // ── Team Management ──
 
