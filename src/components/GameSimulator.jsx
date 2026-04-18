@@ -1073,7 +1073,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                             {oddsMode === 'decimal' ? toDecimalOdds(currentOdds.local) : `${currentOdds.local}%`}
                         </span>
                         <button className="sim-odds-toggle" onClick={() => setOddsMode(m => m === 'decimal' ? 'pct' : 'decimal')}>
-                            {oddsMode === 'decimal' ? '📊 Cuotas' : '% Prob.'}
+                            {oddsMode === 'decimal' ? 'Cuotas' : '% Prob.'}
                         </button>
                         <span className="sim-odds-visit">
                             {oddsMode === 'decimal' ? toDecimalOdds(currentOdds.visit) : `${currentOdds.visit}%`}
