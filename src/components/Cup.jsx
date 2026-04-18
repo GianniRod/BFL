@@ -4,7 +4,7 @@ import { db } from '../firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import './Cup.css';
 import './Liga.css';
-import GameSimulator, { simulateGame, parseStarValue } from './GameSimulator';
+import GameSimulator, { simulateGame, simulateOvertime, parseStarValue } from './GameSimulator';
 
 const YEARS = [2024, 2025, 2026];
 const PHASE_KEYS = ['octavos', 'cuartos', 'semis', 'final'];
@@ -260,11 +260,21 @@ function Cup() {
             if (matchup.ida) legCards.push({ type: 'leg', matchup, mIdx, legKey: 'ida', label: selectedPhase === 'final' ? null : 'IDA', leg: matchup.ida });
             if (matchup.vuelta && selectedPhase !== 'final') legCards.push({ type: 'leg', matchup, mIdx, legKey: 'vuelta', label: 'VUELTA', leg: matchup.vuelta });
         }
-        // Aggregate bar after vuelta
         if (!matchup.isBye && selectedPhase !== 'final') {
             const agg = getAgg(matchup);
             if (agg) legCards.push({ type: 'aggregate', matchup, mIdx, agg });
         }
+    });
+
+    // Group legCards by matchup for visual separation
+    const matchupGroups = [];
+    let currentGroup = null;
+    legCards.forEach(item => {
+        if (!currentGroup || currentGroup.matchupId !== item.matchup.id) {
+            currentGroup = { matchupId: item.matchup.id, items: [] };
+            matchupGroups.push(currentGroup);
+        }
+        currentGroup.items.push(item);
     });
 
     return (
@@ -317,7 +327,7 @@ function Cup() {
 
                 {/* Fecha Content */}
                 <div className="fecha-content">
-                    {legCards.length === 0 && (
+                    {matchupGroups.length === 0 && (
                         <div className="cup-empty-state">
                             <span className="empty-icon">🏟️</span>
                             <p>No hay llaves en {PHASE_NAMES[selectedPhase]}.</p>
@@ -325,7 +335,9 @@ function Cup() {
                         </div>
                     )}
 
-                    {legCards.map((item, idx) => {
+                    {matchupGroups.map((group, gIdx) => (
+                        <div key={group.matchupId} className="cup-matchup-group">
+                            {group.items.map((item, idx) => {
                         if (item.type === 'bye') {
                             const team1 = getTeamById(item.matchup.team1Id);
                             return (
@@ -479,6 +491,8 @@ function Cup() {
                             </div>
                         );
                     })}
+                        </div>
+                    ))}
                 </div>
 
                 {/* Add matchup form */}
@@ -539,6 +553,40 @@ function Cup() {
                             updateLiveUI();
                             await resetLeg(simulatingMatch.phaseKey, simulatingMatch.matchupId, simulatingMatch.legKey);
                             setSimulatingMatch(null);
+                        }}
+                        onStartOvertime={() => {
+                            const prevResult = {
+                                localScore: leg.localScore,
+                                visitanteScore: leg.visitanteScore,
+                                stats: leg.stats || null,
+                                scoreByQuarter: leg.scoreByQuarter || null,
+                                totalPlays: leg.totalPlays || 0,
+                                driveCount: leg.driveCount || 0,
+                                broadcastTime: leg.broadcastTime || 0,
+                            };
+                            const otResult = simulateOvertime(
+                                localT?.['Team Name'] || 'Local',
+                                visitanteT?.['Team Name'] || 'Visitante',
+                                true,
+                                {
+                                    localOff: parseStarValue(localT?.['Offensive Stars'] || 3),
+                                    localDef: parseStarValue(localT?.['Deffensive Stars'] || 3),
+                                    visitOff: parseStarValue(visitanteT?.['Offensive Stars'] || 3),
+                                    visitDef: parseStarValue(visitanteT?.['Deffensive Stars'] || 3),
+                                },
+                                prevResult
+                            );
+                            activeSimsRef.current[simId] = {
+                                phaseKey: simulatingMatch.phaseKey,
+                                matchupId: simulatingMatch.matchupId,
+                                legKey: simulatingMatch.legKey,
+                                result: otResult,
+                                currentIndex: 0,
+                                speed: 1,
+                                lastTickTime: Date.now(),
+                            };
+                            setSimulatingMatch(prev => ({ ...prev, readOnly: false }));
+                            updateLiveUI();
                         }}
                     />
                 );
