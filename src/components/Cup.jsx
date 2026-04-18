@@ -23,6 +23,7 @@ function Cup() {
     const [phases, setPhases] = useState({});
     const [selectedPhase, setSelectedPhase] = useState('octavos');
     const [simulatingMatch, setSimulatingMatch] = useState(null);
+    const [viewMode, setViewMode] = useState('list');
 
     const activeSimsRef = useRef({});
     const [liveMatchesUI, setLiveMatchesUI] = useState({});
@@ -325,7 +326,12 @@ function Cup() {
                     </div>
                 </div>
 
-                {/* Fecha Content */}
+                <div className="cup-view-toggle">
+                    <button className={`cup-view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}>📋 Lista</button>
+                    <button className={`cup-view-btn ${viewMode === 'bracket' ? 'active' : ''}`} onClick={() => setViewMode('bracket')}>🏆 Bracket</button>
+                </div>
+
+                {viewMode === 'list' ? (
                 <div className="fecha-content">
                     {matchupGroups.length === 0 && (
                         <div className="cup-empty-state">
@@ -376,7 +382,6 @@ function Cup() {
                             );
                         }
 
-                        // type === 'leg' — render exactly like Liga's partido-card
                         const { matchup, legKey, label, leg } = item;
                         const local = getTeamById(leg.localId);
                         const visitante = getTeamById(leg.visitanteId);
@@ -385,7 +390,6 @@ function Cup() {
 
                         return (
                             <div key={`${matchup.id}-${legKey}`}>
-                                {/* Matchup header before IDA */}
                                 {legKey === 'ida' && (
                                     <div className="cup-matchup-header-bar">
                                         <span className="cup-matchup-label">Llave {item.mIdx + 1}{label ? ` · ${label}` : ''}</span>
@@ -405,7 +409,6 @@ function Cup() {
                                     </div>
                                 )}
 
-                                {/* Match card — identical to Liga */}
                                 <div
                                     className={`partido-card ${!showConfig ? 'clickable' : ''}`}
                                     onClick={() => {
@@ -494,6 +497,113 @@ function Cup() {
                         </div>
                     ))}
                 </div>
+                ) : (
+                /* ── BRACKET VIEW ── */
+                <div className="bracket-scroll-wrapper">
+                    <div className="bracket-view">
+                        {PHASE_KEYS.slice(PHASE_KEYS.indexOf(selectedPhase)).map((pk, colIdx, arr) => {
+                            const matchups = getPhaseMatchups(pk);
+                            const isLast = colIdx === arr.length - 1;
+
+                            const pairs = [];
+                            if (!isLast && matchups.length > 1) {
+                                for (let i = 0; i < matchups.length; i += 2) {
+                                    pairs.push(matchups.slice(i, i + 2));
+                                }
+                            }
+
+                            const renderBracketCard = (m) => {
+                                const team1 = getTeamById(m.team1Id);
+                                const team2 = m.team2Id ? getTeamById(m.team2Id) : null;
+                                if (m.isBye) {
+                                    return (
+                                        <div className="bracket-card bracket-bye">
+                                            <div className="bracket-team-row winner">
+                                                {team1?.['URL PHOTO'] && <img src={team1['URL PHOTO']} alt="" />}
+                                                <span className="bracket-team-name">{team1?.['Team Name'] || '???'}</span>
+                                                <span className="bracket-bye-label">BYE</span>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                const agg = getAgg(m);
+                                let t1Score = null, t2Score = null;
+                                if (pk === 'final' && m.ida) {
+                                    t1Score = m.ida.localScore;
+                                    t2Score = m.ida.visitanteScore;
+                                } else if (agg) {
+                                    t1Score = agg.t1;
+                                    t2Score = agg.t2;
+                                }
+                                const isW1 = m.winnerId === m.team1Id;
+                                const isW2 = m.winnerId === m.team2Id;
+                                return (
+                                    <div
+                                        className="bracket-card clickable"
+                                        onClick={() => {
+                                            if (showConfig || !m.ida) return;
+                                            const legKey = 'ida';
+                                            const simId = `cup_${m.id}_${legKey}`;
+                                            const ld = liveMatchesUI[simId];
+                                            if (ld) {
+                                                setSimulatingMatch({ phaseKey: pk, matchupId: m.id, legKey, simId, readOnly: false, liveState: true });
+                                            } else if (m.ida.localScore === null) {
+                                                setSimulatingMatch({ phaseKey: pk, matchupId: m.id, legKey, simId, readOnly: false });
+                                            } else {
+                                                setSimulatingMatch({ phaseKey: pk, matchupId: m.id, legKey, simId, readOnly: true });
+                                            }
+                                        }}
+                                    >
+                                        <div className={`bracket-team-row ${isW1 ? 'winner' : ''} ${m.winnerId && !isW1 ? 'loser' : ''}`}>
+                                            {team1?.['URL PHOTO'] && <img src={team1['URL PHOTO']} alt="" />}
+                                            <span className="bracket-team-name">{team1?.['Team Name'] || 'TBD'}</span>
+                                            {t1Score !== null && <span className="bracket-team-score">{t1Score}</span>}
+                                        </div>
+                                        <div className={`bracket-team-row ${isW2 ? 'winner' : ''} ${m.winnerId && !isW2 ? 'loser' : ''}`}>
+                                            {team2?.['URL PHOTO'] && <img src={team2['URL PHOTO']} alt="" />}
+                                            <span className="bracket-team-name">{team2?.['Team Name'] || 'TBD'}</span>
+                                            {t2Score !== null && <span className="bracket-team-score">{t2Score}</span>}
+                                        </div>
+                                    </div>
+                                );
+                            };
+
+                            return (
+                                <div key={pk} className={`bracket-round ${colIdx === 0 ? 'bracket-round-first' : ''} ${isLast ? 'bracket-round-last' : ''}`}>
+                                    <div className="bracket-round-title">{PHASE_NAMES[pk]}</div>
+                                    <div className="bracket-matchups">
+                                        {!isLast && pairs.length > 0 ? (
+                                            pairs.map((pair, pIdx) => (
+                                                <div key={pIdx} className="bracket-pair">
+                                                    {pair.map(m => (
+                                                        <div key={m.id} className="bracket-slot">
+                                                            {renderBracketCard(m)}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            matchups.map(m => (
+                                                <div key={m.id} className="bracket-slot">
+                                                    {renderBracketCard(m)}
+                                                </div>
+                                            ))
+                                        )}
+                                        {matchups.length === 0 && (
+                                            <div className="bracket-slot">
+                                                <div className="bracket-card bracket-empty-card">
+                                                    <div className="bracket-team-row"><span className="bracket-team-name tbd">TBD</span></div>
+                                                    <div className="bracket-team-row"><span className="bracket-team-name tbd">TBD</span></div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+                )}
 
                 {/* Add matchup form */}
                 {showConfig && (
