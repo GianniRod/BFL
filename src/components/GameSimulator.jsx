@@ -613,6 +613,9 @@ export function simulateOvertime(localTeamName, visitanteTeamName, isLocalHome, 
         return 'punt';
     };
 
+    // OT label: first = "OT", then "OT2", "OT3", etc.
+    const otLbl = (n) => n === 1 ? 'OT' : `OT${n}`;
+
     // ── OT Loop ──
     while (localScore === visitanteScore && otNumber < 10) {
         otNumber++;
@@ -622,7 +625,7 @@ export function simulateOvertime(localTeamName, visitanteTeamName, isLocalHome, 
         scoreByQuarter.visitante.push(0);
         const otIdx = scoreByQuarter.local.length - 1;
 
-        push({ desc: `── OVERTIME ${otNumber} ──`, eventType: 'overtime_start' });
+        push({ desc: `── ${otLbl(otNumber).toUpperCase()} ──`, eventType: 'overtime_start' });
         broadcastTime += 180;
 
         const otTeams = [possession === 'local' ? 'local' : 'visitante'];
@@ -634,7 +637,7 @@ export function simulateOvertime(localTeamName, visitanteTeamName, isLocalHome, 
             yardLine = 25; down = 1; yardsToGo = 10; drivePlays = 0;
             driveCount++; otStats[possession].drives++;
 
-            push({ desc: `${tn(possession)} recibe el kickoff – OT${otNumber}`, eventType: 'kickoff' });
+            push({ desc: `${tn(possession)} recibe el kickoff – ${otLbl(otNumber)}`, eventType: 'kickoff' });
             broadcastTime += 45; tick(randomBetween(5, 8));
 
             let otDriveOver = false; let otIter = 0;
@@ -651,7 +654,7 @@ export function simulateOvertime(localTeamName, visitanteTeamName, isLocalHome, 
                     const dec = decide4th();
                     if (dec === 'punt') {
                         const py = randomBetween(35, 55);
-                        push({ desc: `Punt de ${py} yardas – Fin de posesión OT`, eventType: 'punt', down, yardsToGo, yardLine });
+                        push({ desc: `Punt de ${py} yardas – Fin de posesión ${otLbl(otNumber)}`, eventType: 'punt', down, yardsToGo, yardLine });
                         tick(randomBetween(5, 8)); broadcastTime += 65; totalPlays++;
                         otDriveOver = true; break;
                     }
@@ -662,9 +665,9 @@ export function simulateOvertime(localTeamName, visitanteTeamName, isLocalHome, 
                         if (chance(pct)) {
                             if (possession === 'local') { localScore += 3; scoreByQuarter.local[otIdx] += 3; }
                             else { visitanteScore += 3; scoreByQuarter.visitante[otIdx] += 3; }
-                            push({ desc: `¡FIELD GOAL! Gol de campo de ${fgDist} yardas – OT${otNumber}`, eventType: 'field_goal', down, yardsToGo, yardLine });
+                            push({ desc: `¡FIELD GOAL! Gol de campo de ${fgDist} yardas – ${otLbl(otNumber)}`, eventType: 'field_goal', down, yardsToGo, yardLine });
                         } else {
-                            push({ desc: `Field goal fallido de ${fgDist} yardas – OT${otNumber}`, eventType: 'missed_fg', down, yardsToGo, yardLine });
+                            push({ desc: `Field goal fallido de ${fgDist} yardas – ${otLbl(otNumber)}`, eventType: 'missed_fg', down, yardsToGo, yardLine });
                         }
                         tick(randomBetween(4, 7)); broadcastTime += 75;
                         otDriveOver = true; break;
@@ -681,7 +684,7 @@ export function simulateOvertime(localTeamName, visitanteTeamName, isLocalHome, 
                         const dt = defT(possession);
                         if (dt === 'local') { localScore += 7; scoreByQuarter.local[otIdx] += 7; }
                         else { visitanteScore += 7; scoreByQuarter.visitante[otIdx] += 7; }
-                        push({ desc: `¡PICK SIX TOUCHDOWN para ${tn(dt)} – OT${otNumber}!`, eventType: 'touchdown' });
+                        push({ desc: `¡PICK SIX TOUCHDOWN para ${tn(dt)} – ${otLbl(otNumber)}!`, eventType: 'touchdown' });
                         broadcastTime += 85;
                     }
                     otDriveOver = true; break;
@@ -698,7 +701,7 @@ export function simulateOvertime(localTeamName, visitanteTeamName, isLocalHome, 
                     const dt = defT(possession);
                     if (dt === 'local') { localScore += 2; scoreByQuarter.local[otIdx] += 2; }
                     else { visitanteScore += 2; scoreByQuarter.visitante[otIdx] += 2; }
-                    push({ desc: `¡SAFETY! 2 puntos para ${tn(dt)} – OT${otNumber}`, eventType: 'safety', down, yardsToGo, yardLine: 0 });
+                    push({ desc: `¡SAFETY! 2 puntos para ${tn(dt)} – ${otLbl(otNumber)}`, eventType: 'safety', down, yardsToGo, yardLine: 0 });
                     broadcastTime += 40; otDriveOver = true; break;
                 }
 
@@ -706,7 +709,7 @@ export function simulateOvertime(localTeamName, visitanteTeamName, isLocalHome, 
                     if (possession === 'local') { localScore += 7; scoreByQuarter.local[otIdx] += 7; }
                     else { visitanteScore += 7; scoreByQuarter.visitante[otIdx] += 7; }
                     push({ desc: res.desc, eventType: 'play', down, yardsToGo, yardLine: 100 });
-                    push({ desc: `¡TOUCHDOWN ${tn(possession)} – OT${otNumber}!`, eventType: 'touchdown' });
+                    push({ desc: `¡TOUCHDOWN ${tn(possession)} – ${otLbl(otNumber)}!`, eventType: 'touchdown' });
                     tick(randomBetween(5, 10)); broadcastTime += 85;
                     otDriveOver = true; break;
                 }
@@ -731,11 +734,17 @@ export function simulateOvertime(localTeamName, visitanteTeamName, isLocalHome, 
                 }
             }
 
-            if (pIdx === 1 && localScore !== visitanteScore) otGameOver = true;
+            // OT1: both teams get mandatory possession, check after 2nd team
+            // OT2+: sudden death — any score difference ends it immediately
+            if (localScore !== visitanteScore) {
+                if (otNumber >= 2 || pIdx === 1) {
+                    otGameOver = true;
+                }
+            }
         }
     }
 
-    push({ desc: `¡Fin del partido! (OT${otNumber})`, eventType: 'game_end' });
+    push({ desc: `¡Fin del partido! (${otLbl(otNumber)})`, eventType: 'game_end' });
 
     // Merge stats with previous
     const mergedStats = {
@@ -1030,7 +1039,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                         </div>
                         {phase !== 'idle' && (
                             <div className="sim-quarter-info">
-                                <span className="sim-quarter">{curQ > 4 ? `OT${curQ - 4}` : `Q${curQ}`}</span>
+                                <span className="sim-quarter">{curQ > 4 ? (curQ === 5 ? 'OT' : `OT${curQ - 4}`) : `Q${curQ}`}</span>
                                 <span className="sim-clock">{fmtClock(curClk)}</span>
                             </div>
                         )}
@@ -1052,7 +1061,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                             <div key={q} className={`sim-q-dot ${q <= curQ ? 'active' : ''} ${q === curQ ? 'current' : ''}`}>Q{q}</div>
                         ))}
                         {result?.otNumber > 0 && Array.from({ length: result.otNumber }, (_, i) => i + 1).map(ot => (
-                            <div key={`ot${ot}`} className={`sim-q-dot sim-q-ot ${(4 + ot) <= curQ ? 'active' : ''} ${(4 + ot) === curQ ? 'current' : ''}`}>OT{ot}</div>
+                            <div key={`ot${ot}`} className={`sim-q-dot sim-q-ot ${(4 + ot) <= curQ ? 'active' : ''} ${(4 + ot) === curQ ? 'current' : ''}`}>{ot === 1 ? 'OT' : `OT${ot}`}</div>
                         ))}
                     </div>
                 )}
@@ -1136,7 +1145,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                                             <div className="sim-play-meta">{ordinalDown(play.down)} & {play.yardsToGo} | Yd {play.yardLine}</div>
                                         )}
                                     </div>
-                                    <div className="sim-play-clock">{play.quarter > 4 ? `OT${play.quarter - 4}` : `Q${play.quarter}`} {fmtClock(play.gameClock)}</div>
+                                    <div className="sim-play-clock">{play.quarter > 4 ? (play.quarter === 5 ? 'OT' : `OT${play.quarter - 4}`) : `Q${play.quarter}`} {fmtClock(play.gameClock)}</div>
                                 </div>
                             ))}
                         </div>
@@ -1154,7 +1163,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                                     <span className="sq-team"></span>
                                     <span>Q1</span><span>Q2</span><span>Q3</span><span>Q4</span>
                                     {result.scoreByQuarter.local.length > 4 && result.scoreByQuarter.local.slice(4).map((_, i) => (
-                                        <span key={`oth${i}`} className="sq-ot">OT{i + 1}</span>
+                                        <span key={`oth${i}`} className="sq-ot">{i === 0 ? 'OT' : `OT${i + 1}`}</span>
                                     ))}
                                     <span className="sq-tot">TOT</span>
                                 </div>
