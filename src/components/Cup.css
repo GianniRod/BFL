@@ -373,6 +373,258 @@
     object-fit: contain;
 }
 
+/* ── View Toggle (Lista / Bracket) ── */
+.cup-view-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 16px;
+    background: #0d0e14;
+    border-bottom: 1px solid #1e2028;
+}
+
+.cup-view-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #666;
+    padding: 6px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: inherit;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.cup-view-btn:hover {
+    color: #aaa;
+    background: rgba(255,255,255,0.04);
+}
+
+.cup-view-btn.active {
+    color: #ffd700;
+    background: rgba(255,215,0,0.08);
+    border-color: rgba(255,215,0,0.2);
+}
+
+/* ═══════════════════════════════════════
+   BRACKET VIEW
+   ═══════════════════════════════════════ */
+.bracket-scroll-wrapper {
+    overflow-x: auto;
+    padding: 20px 16px 24px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.bracket-scroll-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.bracket-scroll-wrapper::-webkit-scrollbar-track {
+    background: #111;
+    border-radius: 3px;
+}
+
+.bracket-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+.bracket-view {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    min-height: 300px;
+}
+
+/* ── Round Column ── */
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    min-width: 175px;
+    flex-shrink: 0;
+    padding-right: 24px;
+}
+
+.bracket-round-last {
+    padding-right: 0;
+}
+
+.bracket-round-title {
+    text-align: center;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #888;
+    font-weight: 700;
+    padding-bottom: 12px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #222;
+}
+
+/* ── Matchups container ── */
+.bracket-matchups {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    flex: 1;
+    gap: 0;
+}
+
+/* ── Pair wrapper (groups 2 matchups for connectors) ── */
+.bracket-pair {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    gap: 8px;
+    position: relative;
+}
+
+/* ── Slot (individual matchup wrapper) ── */
+.bracket-slot {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    padding: 4px 0;
+    position: relative;
+    min-height: 52px;
+}
+
+/* ── Bracket Card ── */
+.bracket-card {
+    width: 100%;
+    background: #16181e;
+    border: 1px solid #2a2f3a;
+    border-radius: 6px;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.bracket-card.clickable {
+    cursor: pointer;
+}
+
+.bracket-card.clickable:hover {
+    border-color: #d4af37;
+    box-shadow: 0 0 12px rgba(212,175,55,0.15);
+}
+
+.bracket-card.bracket-bye {
+    opacity: 0.6;
+    border-style: dashed;
+}
+
+.bracket-card.bracket-empty-card {
+    opacity: 0.3;
+    border-style: dashed;
+}
+
+/* ── Team Row inside bracket card ── */
+.bracket-team-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    transition: background 0.2s;
+}
+
+.bracket-team-row:first-child {
+    border-bottom: 1px solid #1e2028;
+}
+
+.bracket-team-row img {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.bracket-team-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    color: #ccc;
+}
+
+.bracket-team-name.tbd {
+    color: #444;
+    font-style: italic;
+}
+
+.bracket-team-score {
+    font-weight: 800;
+    color: #d4af37;
+    min-width: 18px;
+    text-align: right;
+    font-size: 0.8rem;
+}
+
+.bracket-team-row.winner {
+    background: rgba(76,175,80,0.08);
+}
+
+.bracket-team-row.winner .bracket-team-name {
+    color: #4caf50;
+    font-weight: 700;
+}
+
+.bracket-team-row.winner .bracket-team-score {
+    color: #4caf50;
+}
+
+.bracket-team-row.loser {
+    opacity: 0.45;
+}
+
+.bracket-bye-label {
+    font-size: 0.6rem;
+    color: #4caf50;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* ═══════════════════════════════════════
+   BRACKET CONNECTOR LINES
+   ═══════════════════════════════════════ */
+
+/* Horizontal line going RIGHT from each slot (non-last rounds) */
+.bracket-round:not(.bracket-round-last) .bracket-slot::after {
+    content: '';
+    position: absolute;
+    right: -24px;
+    top: 50%;
+    width: 24px;
+    border-top: 2px solid #2a2f3a;
+    z-index: 1;
+}
+
+/* Vertical line bridging pair of slots on the RIGHT side */
+.bracket-round:not(.bracket-round-last) .bracket-pair::after {
+    content: '';
+    position: absolute;
+    right: -24px;
+    top: 25%;
+    bottom: 25%;
+    border-right: 2px solid #2a2f3a;
+    z-index: 1;
+}
+
+/* Horizontal line coming IN from the LEFT (non-first rounds) */
+.bracket-round:not(.bracket-round-first) .bracket-slot::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 0;
+    border-top: 2px solid #2a2f3a;
+    z-index: 1;
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
     .cup-add-form {
@@ -381,5 +633,14 @@
 
     .cup-add-form select {
         width: 100%;
+    }
+
+    .bracket-round {
+        min-width: 140px;
+        padding-right: 18px;
+    }
+
+    .bracket-team-name {
+        font-size: 0.65rem;
     }
 }
