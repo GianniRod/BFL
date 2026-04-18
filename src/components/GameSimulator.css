@@ -717,6 +717,57 @@
     color: #555;
 }
 
+/* Overtime area */
+.sim-overtime-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 20px;
+    margin-top: 16px;
+    background: rgba(255, 152, 0, 0.06);
+    border: 1px solid rgba(255, 152, 0, 0.2);
+    border-radius: 12px;
+}
+
+.sim-overtime-label {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #ffb74d;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    animation: otPulse 2s ease-in-out infinite;
+}
+
+@keyframes otPulse {
+    0%, 100% { text-shadow: 0 0 8px rgba(255, 152, 0, 0.3); }
+    50% { text-shadow: 0 0 20px rgba(255, 152, 0, 0.6), 0 0 40px rgba(255, 152, 0, 0.2); }
+}
+
+.sim-overtime-btn {
+    background: linear-gradient(135deg, #e65100, #ff9800);
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+}
+
+.sim-overtime-btn:hover {
+    background: linear-gradient(135deg, #ff6d00, #ffb74d);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+.sim-overtime-btn:active {
+    transform: translateY(0);
+}
+
 /* Save button */
 .sim-save-btn {
     display: block;
