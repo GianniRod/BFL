@@ -592,7 +592,7 @@ function Liga() {
             for (let i = 0; i < n / 2; i++) {
                 const teamA = teamsCopy[i];
                 const teamB = teamsCopy[n - 1 - i];
-                
+
                 // Alternate home/away assignment to minimize consecutive home/away games
                 // For the fixed team (0) and its opponent: alternate every round
                 if (i === 0) {
@@ -840,7 +840,7 @@ function Liga() {
                     className="config-btn"
                     onClick={() => setShowConfig(!showConfig)}
                 >
-                    {showConfig ? 'Cerrar Config' : '⚙️ Configurar'}
+                    {showConfig ? 'Cerrar Config' : 'Configurar'}
                 </button>
             </div>
 
