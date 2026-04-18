@@ -3,7 +3,7 @@ import { subscribeToTeams } from '../services/db';
 import { db } from '../firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import './Liga.css';
-import GameSimulator, { simulateGame, parseStarValue } from './GameSimulator';
+import GameSimulator, { simulateGame, simulateOvertime, parseStarValue } from './GameSimulator';
 
 const YEARS = [2024, 2025, 2026];
 
@@ -1375,6 +1375,41 @@ function Liga() {
                             await resetPartidoData(simulatingPartido.fechaId, simulatingPartido.partidoId);
                             // 5. Close simulator window
                             setSimulatingPartido(null);
+                        }}
+                        onStartOvertime={() => {
+                            // Build previous result from saved partido data
+                            const prevResult = {
+                                localScore: partido.localScore,
+                                visitanteScore: partido.visitanteScore,
+                                stats: partido.stats || null,
+                                scoreByQuarter: partido.scoreByQuarter || null,
+                                totalPlays: partido.totalPlays || 0,
+                                driveCount: partido.driveCount || 0,
+                                broadcastTime: partido.broadcastTime || 0,
+                            };
+                            const otResult = simulateOvertime(
+                                localT?.['Team Name'] || 'Local',
+                                visitanteT?.['Team Name'] || 'Visitante',
+                                true,
+                                {
+                                    localOff: parseStarValue(localT?.['Offensive Stars'] || 3),
+                                    localDef: parseStarValue(localT?.['Deffensive Stars'] || 3),
+                                    visitOff: parseStarValue(visitanteT?.['Offensive Stars'] || 3),
+                                    visitDef: parseStarValue(visitanteT?.['Deffensive Stars'] || 3),
+                                },
+                                prevResult
+                            );
+                            // Start live engine with OT result
+                            activeSimsRef.current[simulatingPartido.partidoId] = {
+                                fechaId: simulatingPartido.fechaId,
+                                result: otResult,
+                                currentIndex: 0,
+                                speed: 1,
+                                lastTickTime: Date.now(),
+                            };
+                            // Switch from readOnly to live mode
+                            setSimulatingPartido(prev => ({ ...prev, readOnly: false }));
+                            updateLiveUI();
                         }}
                     />
                 );
