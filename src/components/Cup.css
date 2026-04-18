@@ -76,6 +76,13 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
+.cup-carousel .fecha-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
 .cup-carousel-nav {
     display: flex;
     align-items: center;
@@ -147,6 +154,19 @@
     font-size: 0.65rem;
     color: #888;
     margin-top: 1px;
+}
+
+/* ── Matchup Group (visual separation) ── */
+.cup-matchup-group {
+    margin-bottom: 20px;
+    border: 1px solid #2a2a35;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #13131a;
+}
+
+.cup-matchup-group:last-child {
+    margin-bottom: 0;
 }
 
 /* ── Matchup Section ── */
