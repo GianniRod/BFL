@@ -428,179 +428,7 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
         }
     }
 
-    // ── OVERTIME SYSTEM ──
-    while (localScore === visitanteScore) {
-        otNumber++;
-        const otIdx = 3 + otNumber; // OT1 = index 4, OT2 = index 5, etc.
-        gameClock.push(300); // 5 minutes per OT
-        scoreByQuarter.local.push(0);
-        scoreByQuarter.visitante.push(0);
-        quarter = otIdx;
-
-        push({ desc: `── OVERTIME ${otNumber} ──`, eventType: 'overtime_start' });
-        broadcastTime += 180; // TV break before OT
-
-        // Each team gets 1 mandatory possession
-        const otTeams = [possession === 'local' ? 'local' : 'visitante'];
-        otTeams.push(otTeams[0] === 'local' ? 'visitante' : 'local');
-
-        let otGameOver = false;
-
-        for (let pIdx = 0; pIdx < otTeams.length && !otGameOver; pIdx++) {
-            possession = otTeams[pIdx];
-            yardLine = 25;
-            down = 1;
-            yardsToGo = 10;
-            drivePlays = 0;
-            driveOver = false;
-            driveCount++;
-            stats[possession].drives++;
-
-            push({ desc: `${tn(possession)} recibe el kickoff – OT${otNumber}`, eventType: 'kickoff' });
-            broadcastTime += 45;
-            tick(randomBetween(5, 8));
-
-            let otDriveOver = false;
-            let otIter = 0;
-
-            while (!otDriveOver && (gameClock[safeQ()] || 0) > 0 && otIter < 200) {
-                otIter++;
-
-                // Turnover on downs
-                if (down > 4) {
-                    push({ desc: 'Turnover on downs – Fin de posesión OT', eventType: 'turnover', down: 4, yardsToGo, yardLine });
-                    otDriveOver = true;
-                    break;
-                }
-
-                // 4th down decision
-                if (down === 4) {
-                    const dec = decide4th();
-
-                    if (dec === 'punt') {
-                        const py = randomBetween(35, 55);
-                        push({ desc: `Punt de ${py} yardas – Fin de posesión OT`, eventType: 'punt', down, yardsToGo, yardLine });
-                        tick(randomBetween(5, 8));
-                        broadcastTime += 65;
-                        totalPlays++;
-                        otDriveOver = true;
-                        break;
-                    }
-
-                    if (dec === 'fg') {
-                        const fgDist = (100 - yardLine) + 17;
-                        let pct = fgDist < 30 ? 92 : fgDist <= 40 ? 85 : fgDist <= 50 ? 70 : fgDist <= 60 ? 50 : 15;
-                        totalPlays++;
-                        if (chance(pct)) {
-                            if (possession === 'local') { localScore += 3; scoreByQuarter.local[otIdx] += 3; }
-                            else { visitanteScore += 3; scoreByQuarter.visitante[otIdx] += 3; }
-                            push({ desc: `¡FIELD GOAL! Gol de campo de ${fgDist} yardas – OT${otNumber}`, eventType: 'field_goal', down, yardsToGo, yardLine });
-                        } else {
-                            push({ desc: `Field goal fallido de ${fgDist} yardas – OT${otNumber}`, eventType: 'missed_fg', down, yardsToGo, yardLine });
-                        }
-                        tick(randomBetween(4, 7));
-                        broadcastTime += 75;
-                        otDriveOver = true;
-                        break;
-                    }
-                    // 'go' → fall through to normal play
-                }
-
-                // Normal play
-                const pt = pickPlay();
-                const res = exec(pt);
-                totalPlays++;
-                drivePlays++;
-
-                // Turnovers
-                if (res.fumble || res.interception) {
-                    stats[def(possession)].turnovers++;
-                    push({ desc: res.desc, eventType: 'turnover', down, yardsToGo, yardLine });
-
-                    if (res.pickSix) {
-                        const dt = def(possession);
-                        if (dt === 'local') { localScore += 7; scoreByQuarter.local[otIdx] += 7; }
-                        else { visitanteScore += 7; scoreByQuarter.visitante[otIdx] += 7; }
-                        push({ desc: `¡PICK SIX TOUCHDOWN para ${tn(dt)} – OT${otNumber}!`, eventType: 'touchdown' });
-                        broadcastTime += 85;
-                    }
-                    otDriveOver = true;
-                    break;
-                }
-
-                // Advance
-                if (!res.incomplete) {
-                    yardLine += res.yards;
-                    if (pt === 'run') stats[possession].rushingYards += res.yards;
-                    else stats[possession].passingYards += res.yards;
-                    stats[possession].totalYards += res.yards;
-                }
-
-                // Safety
-                if (yardLine <= 0) {
-                    const dt = def(possession);
-                    if (dt === 'local') { localScore += 2; scoreByQuarter.local[otIdx] += 2; }
-                    else { visitanteScore += 2; scoreByQuarter.visitante[otIdx] += 2; }
-                    push({ desc: `¡SAFETY! 2 puntos para ${tn(dt)} – OT${otNumber}`, eventType: 'safety', down, yardsToGo, yardLine: 0 });
-                    broadcastTime += 40;
-                    otDriveOver = true;
-                    break;
-                }
-
-                // Touchdown
-                if (yardLine >= 100) {
-                    if (possession === 'local') { localScore += 7; scoreByQuarter.local[otIdx] += 7; }
-                    else { visitanteScore += 7; scoreByQuarter.visitante[otIdx] += 7; }
-                    push({ desc: res.desc, eventType: 'play', down, yardsToGo, yardLine: 100 });
-                    push({ desc: `¡TOUCHDOWN ${tn(possession)} – OT${otNumber}!`, eventType: 'touchdown' });
-                    tick(randomBetween(5, 10));
-                    broadcastTime += 85;
-                    otDriveOver = true;
-                    break;
-                }
-
-                // Clock
-                let clk;
-                if (res.incomplete || pt === 'spike') { clk = randomBetween(5, 8); broadcastTime += 28; }
-                else if (pt === 'run') { clk = randomBetween(30, 48); broadcastTime += 40; }
-                else if (pt === 'sack') { clk = randomBetween(20, 35); broadcastTime += 37; }
-                else { clk = randomBetween(20, 42); broadcastTime += 37; }
-                clk = Math.min(clk, randomBetween(10, 15)); // OT = hurry-up
-                tick(clk);
-
-                // First down check
-                yardsToGo -= (res.incomplete ? 0 : res.yards);
-                if (yardsToGo <= 0 && !res.incomplete) {
-                    stats[possession].firstDowns++;
-                    down = 1;
-                    yardsToGo = Math.min(10, 100 - yardLine);
-                    broadcastTime += 5;
-                    push({ desc: `${res.desc} – PRIMER DOWN`, eventType: 'first_down', down: 1, yardsToGo, yardLine });
-                } else {
-                    down++;
-                    push({ desc: res.desc, eventType: 'play', down: down - 1, yardsToGo: yardsToGo + (res.incomplete ? 0 : res.yards), yardLine });
-                }
-            }
-
-            // After this team's possession, check if score differs → game over
-            if (pIdx === 1 && localScore !== visitanteScore) {
-                otGameOver = true;
-            }
-            // If first team scored and second hasn't gone yet, continue
-            // But if first team scored via pick six by the SECOND team, check immediately
-            if (pIdx === 0 && localScore !== visitanteScore) {
-                // Only end if the scoring was by the DEFENDING team (pick six / safety)
-                // The second team still deserves their possession per rules
-                // So we continue to pIdx === 1
-            }
-        }
-
-        // After both possessions: if still tied, loop to next OT
-        // If one team leads, the while condition will break
-        if (otNumber >= 10) break; // safety valve
-    }
-
-    push({ desc: otNumber > 0 ? `¡Fin del partido! (OT${otNumber})` : '¡Fin del partido!', eventType: 'game_end' });
+    push({ desc: '¡Fin del partido!', eventType: 'game_end' });
 
     // ── Pre-compute Monte Carlo odds at each log entry ──
     const MC_SIMS = 50;
@@ -635,6 +463,323 @@ export function simulateGame(localTeamName, visitanteTeamName, isLocalHome, team
     }
 
     return { log, localScore, visitanteScore, stats, totalPlays, driveCount, broadcastTime, oddsTimeline, scoreByQuarter, otNumber };
+}
+
+// ── Standalone Overtime Simulation ──
+export function simulateOvertime(localTeamName, visitanteTeamName, isLocalHome, teamRatings, prevResult) {
+    const log = [];
+    let localScore = prevResult.localScore;
+    let visitanteScore = prevResult.visitanteScore;
+    const scoreByQuarter = {
+        local: [...(prevResult.scoreByQuarter?.local || [0, 0, 0, 0])],
+        visitante: [...(prevResult.scoreByQuarter?.visitante || [0, 0, 0, 0])],
+    };
+    let otNumber = 0;
+    let broadcastTime = 0;
+    let totalPlays = 0;
+    let driveCount = 0;
+
+    const otStats = {
+        local: { totalYards: 0, passingYards: 0, rushingYards: 0, turnovers: 0, firstDowns: 0, timeOfPossession: 0, drives: 0 },
+        visitante: { totalYards: 0, passingYards: 0, rushingYards: 0, turnovers: 0, firstDowns: 0, timeOfPossession: 0, drives: 0 },
+    };
+
+    const localOff = parseFloat(teamRatings?.localOff) || 3;
+    const localDef = parseFloat(teamRatings?.localDef) || 3;
+    const visitOff = parseFloat(teamRatings?.visitOff) || 3;
+    const visitDef = parseFloat(teamRatings?.visitDef) || 3;
+
+    let possession = chance(50) ? 'local' : 'visitante';
+    let yardLine = 25;
+    let down = 1;
+    let yardsToGo = 10;
+    let drivePlays = 0;
+    const gameClock = [];
+    let currentOtClockIdx = -1;
+
+    const getVentaja = () => {
+        const homeBonus = isLocalHome ? 0.25 : -0.25;
+        if (possession === 'local') return (localOff - visitDef) + homeBonus;
+        return (visitOff - localDef) - homeBonus;
+    };
+    const getAdvPct = () => getVentaja() * 3;
+    const getYardMult = () => { const v = Math.max(-3, Math.min(3, getVentaja())); return 1 + (v * 0.0667); };
+    const getTurnoverAdj = () => -getVentaja() * 0.5;
+
+    const tn = (t) => t === 'local' ? localTeamName : visitanteTeamName;
+    const defT = (t) => t === 'local' ? 'visitante' : 'local';
+
+    const tick = (s) => {
+        if (currentOtClockIdx >= 0) {
+            gameClock[currentOtClockIdx] = Math.max(0, (gameClock[currentOtClockIdx] || 0) - s);
+            otStats[possession].timeOfPossession += s;
+        }
+    };
+
+    const push = (entry) => {
+        log.push({
+            ...entry,
+            quarter: 4 + otNumber,
+            gameClock: currentOtClockIdx >= 0 ? (gameClock[currentOtClockIdx] || 0) : 300,
+            localScore, visitanteScore, broadcastTime, possession,
+            down: entry.down != null ? entry.down : down,
+            yardsToGo: entry.yardsToGo != null ? entry.yardsToGo : yardsToGo,
+            yardLine: entry.yardLine != null ? entry.yardLine : yardLine,
+        });
+    };
+
+    // ── Play execution (same logic as simulateGame) ──
+    const doRun = () => {
+        const fumbleChance = Math.max(0.5, 1.5 + getTurnoverAdj() * 0.3);
+        if (chance(fumbleChance)) return { yards: 0, fumble: true, desc: '¡FUMBLE! Balón suelto recuperado por la defensa' };
+        const adv = getAdvPct(); const mult = getYardMult();
+        const y = Math.round(weightedRandom([
+            { value: randomBetween(-2, -1), weight: Math.max(1, 8 - adv) },
+            { value: randomBetween(0, 2), weight: 35 },
+            { value: randomBetween(3, 5), weight: Math.max(1, 35 + adv) },
+            { value: randomBetween(6, 10), weight: Math.max(1, 18 + adv * 0.5) },
+            { value: randomBetween(11, 15), weight: Math.max(1, 4 + adv * 0.3) },
+            { value: randomBetween(16, 25), weight: 1 },
+        ]) * mult);
+        return { yards: y, desc: `Acarreo por ${y} yardas` };
+    };
+    const doShort = () => {
+        const adv = getAdvPct(); const mult = getYardMult();
+        const intChance = Math.max(0.5, 2 + getTurnoverAdj() * 0.5);
+        const r = weightedRandom([
+            { value: 'inc', weight: Math.max(1, 42 - adv) }, { value: 's', weight: Math.max(1, 35 + adv) },
+            { value: 'm', weight: Math.max(1, 15 + adv * 0.5) }, { value: 'l', weight: 4 },
+            { value: 'int', weight: Math.max(0.5, intChance) },
+        ]);
+        if (r === 'inc') return { yards: 0, incomplete: true, desc: 'Pase incompleto' };
+        if (r === 'int') return { yards: 0, interception: true, desc: '¡INTERCEPCIÓN!' };
+        const rawY = r === 's' ? randomBetween(3, 7) : r === 'm' ? randomBetween(8, 15) : randomBetween(15, 30);
+        const y = Math.round(rawY * mult);
+        return { yards: y, desc: `${r === 'l' ? 'Gran pase completado' : 'Pase completado'} por ${y} yardas` };
+    };
+    const doDeep = () => {
+        const pickSixChance = Math.max(0.2, 0.5 + getTurnoverAdj() * 0.15);
+        if (chance(pickSixChance)) return { yards: 0, interception: true, pickSix: true, desc: '¡PICK SIX! ¡Intercepción devuelta para touchdown!' };
+        const adv = getAdvPct(); const mult = getYardMult();
+        const intChance = Math.max(0.5, 3 + getTurnoverAdj() * 0.5);
+        const r = weightedRandom([
+            { value: 'inc', weight: Math.max(1, 62 - adv) }, { value: 'm', weight: Math.max(1, 20 + adv) },
+            { value: 'l', weight: Math.max(1, 10 + adv * 0.3) }, { value: 'd', weight: Math.max(1, 4 + adv * 0.2) },
+            { value: 'int', weight: Math.max(0.5, intChance) },
+        ]);
+        if (r === 'inc') return { yards: 0, incomplete: true, desc: 'Pase profundo incompleto' };
+        if (r === 'int') return { yards: 0, interception: true, desc: '¡INTERCEPCIÓN en pase profundo!' };
+        const rawY = r === 'm' ? randomBetween(12, 20) : r === 'l' ? randomBetween(21, 35) : randomBetween(36, 60);
+        const y = Math.round(rawY * mult);
+        const prefix = r === 'd' ? '¡BOMBA! Pase profundo' : r === 'l' ? '¡Gran pase profundo' : 'Pase profundo completado';
+        return { yards: y, desc: `${prefix} por ${y} yardas${r === 'l' ? '!' : ''}` };
+    };
+    const doScreen = () => {
+        const mult = getYardMult();
+        const rawY = weightedRandom([
+            { value: randomBetween(-2, 0), weight: 15 }, { value: randomBetween(1, 5), weight: 40 },
+            { value: randomBetween(6, 12), weight: 30 }, { value: randomBetween(13, 25), weight: 15 },
+        ]);
+        return { yards: Math.round(rawY * mult), desc: `Screen pass por ${Math.round(rawY * mult)} yardas` };
+    };
+    const doTrick = () => {
+        const adv = getAdvPct();
+        if (chance(Math.max(10, 40 + adv))) { const y = randomBetween(15, 50); return { yards: y, desc: `¡Jugada engaño exitosa por ${y} yardas!` }; }
+        return { yards: randomBetween(-5, 0), desc: 'Jugada engaño fallida' };
+    };
+    const doSack = () => {
+        const adv = getAdvPct();
+        const y = -randomBetween(Math.round(Math.max(2, 3 - adv * 0.3)), Math.round(Math.max(4, 8 - adv * 0.5)));
+        return { yards: y, desc: `¡SACK! Pérdida de ${Math.abs(y)} yardas` };
+    };
+    const exec = (pt) => {
+        switch (pt) {
+            case 'run': return doRun(); case 'short_pass': return doShort(); case 'deep_pass': return doDeep();
+            case 'screen': return doScreen(); case 'trick': return doTrick(); case 'sack': return doSack();
+            case 'spike': return { yards: 0, incomplete: true, desc: 'Spike – reloj detenido' };
+            default: return { yards: 0, desc: 'Jugada' };
+        }
+    };
+    const pickPlay = () => weightedRandom([
+        { value: 'short_pass', weight: 50 }, { value: 'deep_pass', weight: 35 },
+        { value: 'run', weight: 10 }, { value: 'spike', weight: 5 },
+    ]);
+    const decide4th = () => {
+        const dist = 100 - yardLine; const fgDist = dist + 17;
+        if (fgDist <= 60) return 'fg';
+        if (yardsToGo <= 2 && yardLine >= 55 && chance(30)) return 'go';
+        if (yardLine < 60 && yardsToGo > 3) return chance(85) ? 'punt' : 'go';
+        if (yardLine >= 60 && yardsToGo <= 4 && chance(50)) return 'go';
+        return 'punt';
+    };
+
+    // ── OT Loop ──
+    while (localScore === visitanteScore && otNumber < 10) {
+        otNumber++;
+        gameClock.push(300);
+        currentOtClockIdx = gameClock.length - 1;
+        scoreByQuarter.local.push(0);
+        scoreByQuarter.visitante.push(0);
+        const otIdx = scoreByQuarter.local.length - 1;
+
+        push({ desc: `── OVERTIME ${otNumber} ──`, eventType: 'overtime_start' });
+        broadcastTime += 180;
+
+        const otTeams = [possession === 'local' ? 'local' : 'visitante'];
+        otTeams.push(otTeams[0] === 'local' ? 'visitante' : 'local');
+        let otGameOver = false;
+
+        for (let pIdx = 0; pIdx < otTeams.length && !otGameOver; pIdx++) {
+            possession = otTeams[pIdx];
+            yardLine = 25; down = 1; yardsToGo = 10; drivePlays = 0;
+            driveCount++; otStats[possession].drives++;
+
+            push({ desc: `${tn(possession)} recibe el kickoff – OT${otNumber}`, eventType: 'kickoff' });
+            broadcastTime += 45; tick(randomBetween(5, 8));
+
+            let otDriveOver = false; let otIter = 0;
+
+            while (!otDriveOver && (gameClock[currentOtClockIdx] || 0) > 0 && otIter < 200) {
+                otIter++;
+
+                if (down > 4) {
+                    push({ desc: 'Turnover on downs – Fin de posesión OT', eventType: 'turnover', down: 4, yardsToGo, yardLine });
+                    otDriveOver = true; break;
+                }
+
+                if (down === 4) {
+                    const dec = decide4th();
+                    if (dec === 'punt') {
+                        const py = randomBetween(35, 55);
+                        push({ desc: `Punt de ${py} yardas – Fin de posesión OT`, eventType: 'punt', down, yardsToGo, yardLine });
+                        tick(randomBetween(5, 8)); broadcastTime += 65; totalPlays++;
+                        otDriveOver = true; break;
+                    }
+                    if (dec === 'fg') {
+                        const fgDist = (100 - yardLine) + 17;
+                        let pct = fgDist < 30 ? 92 : fgDist <= 40 ? 85 : fgDist <= 50 ? 70 : fgDist <= 60 ? 50 : 15;
+                        totalPlays++;
+                        if (chance(pct)) {
+                            if (possession === 'local') { localScore += 3; scoreByQuarter.local[otIdx] += 3; }
+                            else { visitanteScore += 3; scoreByQuarter.visitante[otIdx] += 3; }
+                            push({ desc: `¡FIELD GOAL! Gol de campo de ${fgDist} yardas – OT${otNumber}`, eventType: 'field_goal', down, yardsToGo, yardLine });
+                        } else {
+                            push({ desc: `Field goal fallido de ${fgDist} yardas – OT${otNumber}`, eventType: 'missed_fg', down, yardsToGo, yardLine });
+                        }
+                        tick(randomBetween(4, 7)); broadcastTime += 75;
+                        otDriveOver = true; break;
+                    }
+                }
+
+                const pt = pickPlay(); const res = exec(pt);
+                totalPlays++; drivePlays++;
+
+                if (res.fumble || res.interception) {
+                    otStats[defT(possession)].turnovers++;
+                    push({ desc: res.desc, eventType: 'turnover', down, yardsToGo, yardLine });
+                    if (res.pickSix) {
+                        const dt = defT(possession);
+                        if (dt === 'local') { localScore += 7; scoreByQuarter.local[otIdx] += 7; }
+                        else { visitanteScore += 7; scoreByQuarter.visitante[otIdx] += 7; }
+                        push({ desc: `¡PICK SIX TOUCHDOWN para ${tn(dt)} – OT${otNumber}!`, eventType: 'touchdown' });
+                        broadcastTime += 85;
+                    }
+                    otDriveOver = true; break;
+                }
+
+                if (!res.incomplete) {
+                    yardLine += res.yards;
+                    if (pt === 'run') otStats[possession].rushingYards += res.yards;
+                    else otStats[possession].passingYards += res.yards;
+                    otStats[possession].totalYards += res.yards;
+                }
+
+                if (yardLine <= 0) {
+                    const dt = defT(possession);
+                    if (dt === 'local') { localScore += 2; scoreByQuarter.local[otIdx] += 2; }
+                    else { visitanteScore += 2; scoreByQuarter.visitante[otIdx] += 2; }
+                    push({ desc: `¡SAFETY! 2 puntos para ${tn(dt)} – OT${otNumber}`, eventType: 'safety', down, yardsToGo, yardLine: 0 });
+                    broadcastTime += 40; otDriveOver = true; break;
+                }
+
+                if (yardLine >= 100) {
+                    if (possession === 'local') { localScore += 7; scoreByQuarter.local[otIdx] += 7; }
+                    else { visitanteScore += 7; scoreByQuarter.visitante[otIdx] += 7; }
+                    push({ desc: res.desc, eventType: 'play', down, yardsToGo, yardLine: 100 });
+                    push({ desc: `¡TOUCHDOWN ${tn(possession)} – OT${otNumber}!`, eventType: 'touchdown' });
+                    tick(randomBetween(5, 10)); broadcastTime += 85;
+                    otDriveOver = true; break;
+                }
+
+                let clk;
+                if (res.incomplete || pt === 'spike') { clk = randomBetween(5, 8); broadcastTime += 28; }
+                else if (pt === 'run') { clk = randomBetween(30, 48); broadcastTime += 40; }
+                else if (pt === 'sack') { clk = randomBetween(20, 35); broadcastTime += 37; }
+                else { clk = randomBetween(20, 42); broadcastTime += 37; }
+                clk = Math.min(clk, randomBetween(10, 15));
+                tick(clk);
+
+                yardsToGo -= (res.incomplete ? 0 : res.yards);
+                if (yardsToGo <= 0 && !res.incomplete) {
+                    otStats[possession].firstDowns++;
+                    down = 1; yardsToGo = Math.min(10, 100 - yardLine);
+                    broadcastTime += 5;
+                    push({ desc: `${res.desc} – PRIMER DOWN`, eventType: 'first_down', down: 1, yardsToGo, yardLine });
+                } else {
+                    down++;
+                    push({ desc: res.desc, eventType: 'play', down: down - 1, yardsToGo: yardsToGo + (res.incomplete ? 0 : res.yards), yardLine });
+                }
+            }
+
+            if (pIdx === 1 && localScore !== visitanteScore) otGameOver = true;
+        }
+    }
+
+    push({ desc: `¡Fin del partido! (OT${otNumber})`, eventType: 'game_end' });
+
+    // Merge stats with previous
+    const mergedStats = {
+        local: {
+            totalYards: (prevResult.stats?.local?.totalYards || 0) + otStats.local.totalYards,
+            passingYards: (prevResult.stats?.local?.passingYards || 0) + otStats.local.passingYards,
+            rushingYards: (prevResult.stats?.local?.rushingYards || 0) + otStats.local.rushingYards,
+            turnovers: (prevResult.stats?.local?.turnovers || 0) + otStats.local.turnovers,
+            firstDowns: (prevResult.stats?.local?.firstDowns || 0) + otStats.local.firstDowns,
+            timeOfPossession: (prevResult.stats?.local?.timeOfPossession || 0) + otStats.local.timeOfPossession,
+            drives: (prevResult.stats?.local?.drives || 0) + otStats.local.drives,
+        },
+        visitante: {
+            totalYards: (prevResult.stats?.visitante?.totalYards || 0) + otStats.visitante.totalYards,
+            passingYards: (prevResult.stats?.visitante?.passingYards || 0) + otStats.visitante.passingYards,
+            rushingYards: (prevResult.stats?.visitante?.rushingYards || 0) + otStats.visitante.rushingYards,
+            turnovers: (prevResult.stats?.visitante?.turnovers || 0) + otStats.visitante.turnovers,
+            firstDowns: (prevResult.stats?.visitante?.firstDowns || 0) + otStats.visitante.firstDowns,
+            timeOfPossession: (prevResult.stats?.visitante?.timeOfPossession || 0) + otStats.visitante.timeOfPossession,
+            drives: (prevResult.stats?.visitante?.drives || 0) + otStats.visitante.drives,
+        },
+    };
+
+    // Build odds timeline for OT log
+    const oddsTimeline = log.map((entry) => {
+        if (entry.eventType === 'game_end') {
+            const lw = entry.localScore > entry.visitanteScore ? 100 : entry.localScore < entry.visitanteScore ? 0 : 50;
+            return { local: lw, visit: 100 - lw };
+        }
+        return { local: 50, visit: 50 };
+    });
+
+    return {
+        log,
+        localScore,
+        visitanteScore,
+        stats: mergedStats,
+        totalPlays: (prevResult.totalPlays || 0) + totalPlays,
+        driveCount: (prevResult.driveCount || 0) + driveCount,
+        broadcastTime: (prevResult.broadcastTime || 0) + broadcastTime,
+        oddsTimeline,
+        scoreByQuarter,
+        otNumber,
+    };
 }
 
 // ── Quick lightweight sim for Monte Carlo (no logging) ──
@@ -722,7 +867,7 @@ const EVT_ICON = {
     overtime_start: 'OT',
 };
 
-function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose, readOnlyResult, liveEngine, onStartLive, onSpeedChange, onSkipToEnd, matchDateTime, onSimulateUntil, onReset }) {
+function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClose, readOnlyResult, liveEngine, onStartLive, onSpeedChange, onSkipToEnd, matchDateTime, onSimulateUntil, onReset, onStartOvertime }) {
     const logRef = useRef(null);
     const untilTimeRef = useRef(null);
     const [oddsMode, setOddsMode] = useState('decimal');
@@ -1039,7 +1184,15 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                             <span>Drives: {result.driveCount ?? '-'}</span>
                             <span>Duración TV: {result.broadcastTime != null ? fmtTime(result.broadcastTime) : '-'}</span>
                         </div>
-                        {!readOnlyResult && (
+                        {phase === 'finished' && localS === visitS && onStartOvertime && (
+                            <div className="sim-overtime-area">
+                                <div className="sim-overtime-label">⚡ EMPATE</div>
+                                <button className="sim-overtime-btn" onClick={onStartOvertime}>
+                                    🏈 Empezar Overtime
+                                </button>
+                            </div>
+                        )}
+                        {!readOnlyResult && localS !== visitS && (
                             <button className="sim-save-btn" onClick={handleSave}>Guardar Resultado</button>
                         )}
                         {onReset && (
