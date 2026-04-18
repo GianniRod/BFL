@@ -501,18 +501,35 @@ function Cup() {
                 /* ── BRACKET VIEW ── */
                 <div className="bracket-scroll-wrapper">
                     <div className="bracket-view">
-                        {PHASE_KEYS.slice(PHASE_KEYS.indexOf(selectedPhase)).map((pk, colIdx, arr) => {
-                            const matchups = getPhaseMatchups(pk);
-                            const isLast = colIdx === arr.length - 1;
+                        {(() => {
+                            const phasesToShow = PHASE_KEYS.slice(PHASE_KEYS.indexOf(selectedPhase));
+                            // Calculate expected slots per round based on first round
+                            const firstRoundMatchups = getPhaseMatchups(phasesToShow[0]);
+                            const firstCount = Math.max(firstRoundMatchups.length, 1);
 
-                            const pairs = [];
-                            if (!isLast && matchups.length > 1) {
-                                for (let i = 0; i < matchups.length; i += 2) {
-                                    pairs.push(matchups.slice(i, i + 2));
+                            // Build slots for each round: real matchups + TBD placeholders
+                            const roundsData = phasesToShow.map((pk, colIdx) => {
+                                const expectedCount = Math.max(1, Math.ceil(firstCount / Math.pow(2, colIdx)));
+                                const realMatchups = getPhaseMatchups(pk);
+                                const slots = [];
+                                for (let i = 0; i < expectedCount; i++) {
+                                    if (i < realMatchups.length) {
+                                        slots.push({ type: 'real', matchup: realMatchups[i] });
+                                    } else {
+                                        slots.push({ type: 'tbd', id: `tbd-${pk}-${i}` });
+                                    }
                                 }
-                            }
+                                return { pk, slots, isLast: colIdx === phasesToShow.length - 1 };
+                            });
 
-                            const renderBracketCard = (m) => {
+                            const renderTbdCard = () => (
+                                <div className="bracket-card bracket-empty-card">
+                                    <div className="bracket-team-row"><span className="bracket-team-name tbd">TBD</span></div>
+                                    <div className="bracket-team-row"><span className="bracket-team-name tbd">TBD</span></div>
+                                </div>
+                            );
+
+                            const renderBracketCard = (m, pk) => {
                                 const team1 = getTeamById(m.team1Id);
                                 const team2 = m.team2Id ? getTeamById(m.team2Id) : null;
                                 if (m.isBye) {
@@ -568,39 +585,42 @@ function Cup() {
                                 );
                             };
 
-                            return (
-                                <div key={pk} className={`bracket-round ${colIdx === 0 ? 'bracket-round-first' : ''} ${isLast ? 'bracket-round-last' : ''}`}>
-                                    <div className="bracket-round-title">{PHASE_NAMES[pk]}</div>
-                                    <div className="bracket-matchups">
-                                        {!isLast && pairs.length > 0 ? (
-                                            pairs.map((pair, pIdx) => (
-                                                <div key={pIdx} className="bracket-pair">
-                                                    {pair.map(m => (
-                                                        <div key={m.id} className="bracket-slot">
-                                                            {renderBracketCard(m)}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ))
-                                        ) : (
-                                            matchups.map(m => (
-                                                <div key={m.id} className="bracket-slot">
-                                                    {renderBracketCard(m)}
-                                                </div>
-                                            ))
-                                        )}
-                                        {matchups.length === 0 && (
-                                            <div className="bracket-slot">
-                                                <div className="bracket-card bracket-empty-card">
-                                                    <div className="bracket-team-row"><span className="bracket-team-name tbd">TBD</span></div>
-                                                    <div className="bracket-team-row"><span className="bracket-team-name tbd">TBD</span></div>
-                                                </div>
-                                            </div>
-                                        )}
+                            return roundsData.map(({ pk, slots, isLast }, colIdx) => {
+                                // Group into pairs for connector lines (except last round)
+                                const hasPairs = !isLast && slots.length > 1;
+                                const pairs = [];
+                                if (hasPairs) {
+                                    for (let i = 0; i < slots.length; i += 2) {
+                                        pairs.push(slots.slice(i, i + 2));
+                                    }
+                                }
+
+                                return (
+                                    <div key={pk} className={`bracket-round ${colIdx === 0 ? 'bracket-round-first' : ''} ${isLast ? 'bracket-round-last' : ''}`}>
+                                        <div className="bracket-round-title">{PHASE_NAMES[pk]}</div>
+                                        <div className="bracket-matchups">
+                                            {hasPairs ? (
+                                                pairs.map((pair, pIdx) => (
+                                                    <div key={pIdx} className="bracket-pair">
+                                                        {pair.map(slot => (
+                                                            <div key={slot.type === 'real' ? slot.matchup.id : slot.id} className="bracket-slot">
+                                                                {slot.type === 'real' ? renderBracketCard(slot.matchup, pk) : renderTbdCard()}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                slots.map(slot => (
+                                                    <div key={slot.type === 'real' ? slot.matchup.id : slot.id} className="bracket-slot">
+                                                        {slot.type === 'real' ? renderBracketCard(slot.matchup, pk) : renderTbdCard()}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            });
+                        })()}
                     </div>
                 </div>
                 )}
