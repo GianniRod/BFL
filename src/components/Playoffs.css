@@ -1,0 +1,646 @@
+/* ═══════════════════════════════════════════════════════════════
+   CUP – Knockout Tournament Styles
+   Reuses Liga.css card styles. Only playoffs-specific additions here.
+   ═══════════════════════════════════════════════════════════════ */
+
+.playoffs-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 10px;
+}
+
+.playoffs-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 5px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 800;
+}
+
+.playoffs-subtitle {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 20px;
+}
+
+/* ── Year Selector (matches Liga) ── */
+.playoffs-year-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.playoffs-year-selector label {
+    font-weight: bold;
+}
+
+.playoffs-year-selector select {
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 8px;
+}
+
+.playoffs-config-btn {
+    background: #333;
+    border: 1px solid #555;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: inherit;
+}
+
+.playoffs-config-btn:hover {
+    background: #444;
+    border-color: #777;
+}
+
+/* ── Phase Carousel (matches Liga's fecha carousel) ── */
+.playoffs-carousel {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.playoffs-carousel .fecha-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.playoffs-carousel-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #111318;
+    border-bottom: 1px solid #1e2028;
+}
+
+.playoffs-phase-pills-strip {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px 0;
+}
+
+.playoffs-phase-pills-strip::-webkit-scrollbar {
+    display: none;
+}
+
+.playoffs-phase-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 14px;
+    background: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: inherit;
+}
+
+.playoffs-phase-pill:hover {
+    color: #aaa;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.playoffs-phase-pill.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.playoffs-phase-pill.completed {
+    color: #4caf50;
+}
+
+.playoffs-phase-pill .pill-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.playoffs-phase-pill .pill-count {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.playoffs-phase-pill .pill-count-badge {
+    font-size: 0.65rem;
+    color: #888;
+    margin-top: 1px;
+}
+
+/* ── Matchup Group (visual separation) ── */
+.playoffs-matchup-group {
+    margin-bottom: 20px;
+    border: 1px solid #2a2a35;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #13131a;
+}
+
+.playoffs-matchup-group:last-child {
+    margin-bottom: 0;
+}
+
+/* ── Matchup Section ── */
+.playoffs-matchup-section {
+    margin-bottom: 24px;
+}
+
+.playoffs-matchup-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: #111318;
+    border-bottom: 1px solid #1e2028;
+}
+
+.playoffs-matchup-label {
+    font-size: 0.72rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.playoffs-matchup-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.playoffs-matchup-badge .winner-text {
+    font-size: 0.72rem;
+    color: #ffd700;
+    font-weight: 600;
+}
+
+.playoffs-matchup-badge .winner-text img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.playoffs-aggregate-bar {
+    text-align: center;
+    padding: 6px 12px;
+    background: #0d0d12;
+    border-top: 1px solid #1e2028;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.playoffs-aggregate-bar strong {
+    color: #d4af37;
+    font-weight: 700;
+}
+
+.playoffs-bye-text {
+    text-align: center;
+    padding: 16px 20px;
+    color: #4caf50;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.playoffs-leg-label {
+    font-size: 0.6rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    text-align: center;
+    padding: 4px 0 0;
+    margin-bottom: -8px;
+}
+
+/* ── Add Matchup Form (matches Liga's add-partido-form) ── */
+.playoffs-add-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 15px 20px;
+    border-top: 1px solid #333;
+    flex-wrap: wrap;
+    background: #111318;
+    border-radius: 0 0 12px 12px;
+}
+
+.playoffs-add-form select {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.playoffs-add-form .vs-text {
+    color: #888;
+    font-weight: bold;
+}
+
+.playoffs-add-btn {
+    background: #1b5e20;
+    border: 1px solid #4caf50;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.playoffs-add-btn:hover {
+    background: #2e7d32;
+}
+
+.playoffs-remove-matchup-btn {
+    background: transparent;
+    border: 1px solid #444;
+    color: #888;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.7rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    transition: all 0.2s;
+}
+
+.playoffs-remove-matchup-btn:hover {
+    background: rgba(244, 67, 54, 0.15);
+    border-color: #ef5350;
+    color: #ef5350;
+}
+
+/* ── Empty State ── */
+.playoffs-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #555;
+}
+
+.playoffs-empty-state .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* ── Champion Banner ── */
+.playoffs-champion-banner {
+    text-align: center;
+    padding: 24px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 140, 0, 0.05));
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    border-radius: 16px;
+    animation: championGlow 3s ease-in-out infinite;
+}
+
+@keyframes championGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.1); }
+    50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); }
+}
+
+.playoffs-champion-banner .trophy {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.playoffs-champion-banner .champion-title {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+}
+
+.playoffs-champion-banner .champion-name {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #ffd700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.playoffs-champion-banner .champion-name img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+/* ── View Toggle (Lista / Bracket) ── */
+.playoffs-view-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 16px;
+    background: #0d0e14;
+    border-bottom: 1px solid #1e2028;
+}
+
+.playoffs-view-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #666;
+    padding: 6px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: inherit;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.playoffs-view-btn:hover {
+    color: #aaa;
+    background: rgba(255,255,255,0.04);
+}
+
+.playoffs-view-btn.active {
+    color: #ffd700;
+    background: rgba(255,215,0,0.08);
+    border-color: rgba(255,215,0,0.2);
+}
+
+/* ═══════════════════════════════════════
+   BRACKET VIEW
+   ═══════════════════════════════════════ */
+.bracket-scroll-wrapper {
+    overflow-x: auto;
+    padding: 20px 16px 24px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.bracket-scroll-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.bracket-scroll-wrapper::-webkit-scrollbar-track {
+    background: #111;
+    border-radius: 3px;
+}
+
+.bracket-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+.bracket-view {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    min-height: 300px;
+}
+
+/* ── Round Column ── */
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    min-width: 175px;
+    flex-shrink: 0;
+    padding-right: 24px;
+}
+
+.bracket-round-last {
+    padding-right: 0;
+}
+
+.bracket-round-title {
+    text-align: center;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #888;
+    font-weight: 700;
+    padding-bottom: 12px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #222;
+}
+
+/* ── Matchups container ── */
+.bracket-matchups {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    flex: 1;
+    gap: 0;
+}
+
+/* ── Pair wrapper (groups 2 matchups for connectors) ── */
+.bracket-pair {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    gap: 8px;
+    position: relative;
+}
+
+/* ── Slot (individual matchup wrapper) ── */
+.bracket-slot {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    padding: 4px 0;
+    position: relative;
+    min-height: 52px;
+}
+
+/* ── Bracket Card ── */
+.bracket-card {
+    width: 100%;
+    background: #16181e;
+    border: 1px solid #2a2f3a;
+    border-radius: 6px;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.bracket-card.clickable {
+    cursor: pointer;
+}
+
+.bracket-card.clickable:hover {
+    border-color: #d4af37;
+    box-shadow: 0 0 12px rgba(212,175,55,0.15);
+}
+
+.bracket-card.bracket-bye {
+    opacity: 0.6;
+    border-style: dashed;
+}
+
+.bracket-card.bracket-empty-card {
+    opacity: 0.3;
+    border-style: dashed;
+}
+
+/* ── Team Row inside bracket card ── */
+.bracket-team-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    transition: background 0.2s;
+}
+
+.bracket-team-row:first-child {
+    border-bottom: 1px solid #1e2028;
+}
+
+.bracket-team-row img {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.bracket-team-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    color: #ccc;
+}
+
+.bracket-team-name.tbd {
+    color: #444;
+    font-style: italic;
+}
+
+.bracket-team-score {
+    font-weight: 800;
+    color: #d4af37;
+    min-width: 18px;
+    text-align: right;
+    font-size: 0.8rem;
+}
+
+.bracket-team-row.winner {
+    background: rgba(76,175,80,0.08);
+}
+
+.bracket-team-row.winner .bracket-team-name {
+    color: #4caf50;
+    font-weight: 700;
+}
+
+.bracket-team-row.winner .bracket-team-score {
+    color: #4caf50;
+}
+
+.bracket-team-row.loser {
+    opacity: 0.45;
+}
+
+.bracket-bye-label {
+    font-size: 0.6rem;
+    color: #4caf50;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* ═══════════════════════════════════════
+   BRACKET CONNECTOR LINES
+   ═══════════════════════════════════════ */
+
+/* Horizontal line going RIGHT from each slot (non-last rounds) */
+.bracket-round:not(.bracket-round-last) .bracket-slot::after {
+    content: '';
+    position: absolute;
+    right: -24px;
+    top: 50%;
+    width: 24px;
+    border-top: 2px solid #2a2f3a;
+    z-index: 1;
+}
+
+/* Vertical line bridging pair of slots on the RIGHT side */
+.bracket-round:not(.bracket-round-last) .bracket-pair::after {
+    content: '';
+    position: absolute;
+    right: -24px;
+    top: 25%;
+    bottom: 25%;
+    border-right: 2px solid #2a2f3a;
+    z-index: 1;
+}
+
+/* Horizontal line coming IN from the LEFT (non-first rounds) */
+.bracket-round:not(.bracket-round-first) .bracket-slot::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 0;
+    border-top: 2px solid #2a2f3a;
+    z-index: 1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+    .playoffs-add-form {
+        flex-direction: column;
+    }
+
+    .playoffs-add-form select {
+        width: 100%;
+    }
+
+    .bracket-round {
+        min-width: 140px;
+        padding-right: 18px;
+    }
+
+    .bracket-team-name {
+        font-size: 0.65rem;
+    }
+}
