@@ -7,6 +7,7 @@ import MatchList from './components/MatchList';
 import Palmares from './components/Palmares';
 import Liga from './components/Liga';
 import Cup from './components/Cup';
+import Playoffs from './components/Playoffs';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/palmares" element={<Palmares />} />
             <Route path="/liga" element={<Liga />} />
             <Route path="/cup" element={<Cup />} />
+            <Route path="/playoffs" element={<Playoffs />} />
           </Routes>
         </main>
       </div>
