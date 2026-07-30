@@ -12,6 +12,7 @@ function Header() {
                 <Link to="/palmares">Palmares</Link>
                 <Link to="/liga">Liga</Link>
                 <Link to="/cup">Cup</Link>
+                <Link to="/playoffs">Playoffs</Link>
             </nav>
         </header>
     );
