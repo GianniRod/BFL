@@ -37,7 +37,7 @@ function Playoffs() {
 
     useEffect(() => {
         phasesLoadedRef.current = false;
-        const docRef = doc(db, 'playoffsConfig', String(selectedYear));
+        const docRef = doc(db, 'cupConfig', `playoffs_${selectedYear}`);
         const unsub = onSnapshot(docRef, (snap) => {
             if (snap.exists()) {
                 const data = snap.data();
@@ -130,7 +130,7 @@ function Playoffs() {
 
     // ── Firestore ──
     const savePhases = async (newPhases) => {
-        const docRef = doc(db, 'playoffsConfig', String(selectedYear));
+        const docRef = doc(db, 'cupConfig', `playoffs_${selectedYear}`);
         await setDoc(docRef, { phases: newPhases }, { merge: true });
     };
 
