@@ -126,6 +126,41 @@
     text-transform: uppercase;
 }
 
+.palmares-years {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.palmares-year {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-2);
+    background: var(--surface-3);
+    border: 1px solid var(--border-strong);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+}
+
+.palmares-card.champion .palmares-year {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: var(--accent-border);
+}
+
+.palmares-year.untagged,
+.palmares-card.champion .palmares-year.untagged {
+    color: var(--text-3);
+    background: transparent;
+    border-color: var(--border-strong);
+    border-style: dashed;
+}
+
 .palmares-empty {
     text-align: center;
     padding: 80px 20px;

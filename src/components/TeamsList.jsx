@@ -3,11 +3,15 @@ import { useEffect, useState } from 'react';
 import { subscribeToTeams } from '../services/db';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import { getTitleYears, getTitleCount, getUntaggedTitles } from '../services/titles';
 import './TeamsList.css';
+
+const CURRENT_YEAR = new Date().getFullYear();
 
 function TeamsList() {
     const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [titleYearInput, setTitleYearInput] = useState({}); // { [teamId]: '2026' }
 
     useEffect(() => {
         const unsubscribe = subscribeToTeams((data) => {
@@ -75,6 +79,42 @@ function TeamsList() {
             await updateDoc(doc(db, 'teams', teamId), { [field]: clamped });
         } catch (e) {
             console.error('Error updating stars:', e);
+        }
+    };
+
+    // assignExisting: give a year to a title that was loaded without one
+    // (the total doesn't change). Otherwise it's a new title.
+    const addTitle = async (team, assignExisting = false) => {
+        const year = parseInt(titleYearInput[team.id] ?? CURRENT_YEAR, 10);
+        if (!year || year < 1900 || year > 2100) {
+            alert('Ingresa un año válido.');
+            return;
+        }
+        const years = getTitleYears(team);
+        if (years.includes(year)) {
+            alert(`${team['Team Name']} ya tiene un título en ${year}.`);
+            return;
+        }
+        const count = getTitleCount(team);
+        try {
+            await updateDoc(doc(db, 'teams', team.id), {
+                'Title Years': [...years, year].sort((a, b) => a - b),
+                'League Titles': assignExisting ? count : count + 1,
+            });
+        } catch (e) {
+            console.error('Error adding title:', e);
+        }
+    };
+
+    const removeTitle = async (team, year) => {
+        if (!window.confirm(`¿Quitar el título ${year} de ${team['Team Name']}?`)) return;
+        try {
+            await updateDoc(doc(db, 'teams', team.id), {
+                'Title Years': getTitleYears(team).filter(y => y !== year),
+                'League Titles': Math.max(0, getTitleCount(team) - 1),
+            });
+        } catch (e) {
+            console.error('Error removing title:', e);
         }
     };
 
@@ -148,8 +188,50 @@ function TeamsList() {
                                 </div>
                                 <div className="team-meta-item">
                                     <span className="team-meta-label">Títulos</span>
-                                    <span className="team-meta-value">{team['League Titles']}</span>
+                                    <span className="team-meta-value">{getTitleCount(team)}</span>
                                 </div>
+                            </div>
+                            <div className="team-titles">
+                                {getTitleCount(team) > 0 && (
+                                    <div className="title-chips">
+                                        {getTitleYears(team).map(year => (
+                                            <span key={year} className="title-chip">
+                                                🏆 {year}
+                                                <button
+                                                    className="title-chip-remove"
+                                                    onClick={() => removeTitle(team, year)}
+                                                    aria-label={`Quitar título ${year}`}
+                                                >
+                                                    ✕
+                                                </button>
+                                            </span>
+                                        ))}
+                                        {getUntaggedTitles(team) > 0 && (
+                                            <span className="title-chip untagged">
+                                                {getUntaggedTitles(team)} sin año
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                                <div className="title-add">
+                                    <input
+                                        type="number"
+                                        className="title-year-input"
+                                        min="1900"
+                                        max="2100"
+                                        value={titleYearInput[team.id] ?? CURRENT_YEAR}
+                                        onChange={(e) => setTitleYearInput(prev => ({ ...prev, [team.id]: e.target.value }))}
+                                        aria-label="Año del título"
+                                    />
+                                    <button className="title-add-btn" onClick={() => addTitle(team)}>
+                                        + Título
+                                    </button>
+                                </div>
+                                {getUntaggedTitles(team) > 0 && (
+                                    <button className="title-assign-btn" onClick={() => addTitle(team, true)}>
+                                        Asignar este año a un título sin año
+                                    </button>
+                                )}
                             </div>
                             <div className="stars">
                                 <div className="star-row">
