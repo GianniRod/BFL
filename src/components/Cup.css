@@ -394,6 +394,20 @@
     border-radius: var(--radius);
 }
 
+.cup-champion-banner .trophy.trophy-img {
+    width: 56px;
+    height: 76px;
+    background: none;
+    border: none;
+    filter: drop-shadow(0 6px 16px rgba(212, 175, 55, 0.25));
+}
+
+.cup-champion-banner .trophy.trophy-img img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+}
+
 .cup-champion-banner .champion-title {
     font-size: 0.66rem;
     font-weight: 600;
@@ -636,6 +650,11 @@
         width: 44px;
         height: 44px;
         font-size: 1.3rem;
+    }
+
+    .cup-champion-banner .trophy.trophy-img {
+        width: 44px;
+        height: 60px;
     }
 
     .cup-champion-banner .champion-name {
