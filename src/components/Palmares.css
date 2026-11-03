@@ -44,24 +44,6 @@
         var(--surface-1);
 }
 
-.palmares-card.champion::before {
-    content: 'Máximo ganador';
-    position: absolute;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: var(--accent-soft);
-    border: 1px solid var(--accent-border);
-    padding: 2px 8px;
-    border-radius: 999px;
-    white-space: nowrap;
-}
-
 .palmares-card.champion .titles-count {
     color: var(--accent);
 }
@@ -95,10 +77,6 @@
 
 .palmares-card.champion .palmares-trophy {
     filter: drop-shadow(0 2px 6px rgba(212, 175, 55, 0.35));
-}
-
-.palmares-card.champion .palmares-crest {
-    margin-top: 14px;
 }
 
 .palmares-logo {
