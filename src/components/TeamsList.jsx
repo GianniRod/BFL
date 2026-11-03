@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { subscribeToTeams } from '../services/db';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import { getTitleYears, getTitleCount, getUntaggedTitles } from '../services/titles';
+import { getTitleYears, getTitleCount, getUntaggedTitles, getTitleFinals, getTitleFinal, hasScore } from '../services/titles';
 import './TeamsList.css';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -12,6 +12,7 @@ function TeamsList() {
     const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [titleYearInput, setTitleYearInput] = useState({}); // { [teamId]: '2026' }
+    const [editingFinal, setEditingFinal] = useState(null); // { teamId, year, rivalId, score, rivalScore }
 
     useEffect(() => {
         const unsubscribe = subscribeToTeams((data) => {
@@ -108,15 +109,66 @@ function TeamsList() {
 
     const removeTitle = async (team, year) => {
         if (!window.confirm(`¿Quitar el título ${year} de ${team['Team Name']}?`)) return;
+        const finals = { ...getTitleFinals(team) };
+        delete finals[String(year)];
         try {
             await updateDoc(doc(db, 'teams', team.id), {
                 'Title Years': getTitleYears(team).filter(y => y !== year),
                 'League Titles': Math.max(0, getTitleCount(team) - 1),
+                'Title Finals': finals,
             });
+            if (editingFinal?.teamId === team.id && editingFinal.year === year) setEditingFinal(null);
         } catch (e) {
             console.error('Error removing title:', e);
         }
     };
+
+    // ── Final played for a title (rival + score) ──
+    const openFinalEditor = (team, year) => {
+        if (editingFinal?.teamId === team.id && editingFinal.year === year) {
+            setEditingFinal(null);
+            return;
+        }
+        const final = getTitleFinal(team, year);
+        setEditingFinal({
+            teamId: team.id,
+            year,
+            rivalId: final?.rivalId || '',
+            score: final?.score ?? '',
+            rivalScore: final?.rivalScore ?? '',
+        });
+    };
+
+    const saveFinal = async (team) => {
+        const { year, rivalId, score, rivalScore } = editingFinal;
+        const hasAnyScore = score !== '' || rivalScore !== '';
+        if (hasAnyScore && (score === '' || rivalScore === '')) {
+            alert('Completa los dos puntajes, o deja ambos vacíos.');
+            return;
+        }
+        if (hasAnyScore && Number(score) <= Number(rivalScore)) {
+            alert(`El campeón (${team['Team Name']}) tiene que tener más puntos que el rival.`);
+            return;
+        }
+        const finals = { ...getTitleFinals(team) };
+        if (!rivalId && !hasAnyScore) {
+            delete finals[String(year)];
+        } else {
+            finals[String(year)] = {
+                rivalId: rivalId || null,
+                score: hasAnyScore ? Number(score) : null,
+                rivalScore: hasAnyScore ? Number(rivalScore) : null,
+            };
+        }
+        try {
+            await updateDoc(doc(db, 'teams', team.id), { 'Title Finals': finals });
+            setEditingFinal(null);
+        } catch (e) {
+            console.error('Error saving final:', e);
+        }
+    };
+
+    const getTeamName = (id) => teams.find(t => t.id === id)?.['Team Name'];
 
     const parseStarValue = (v) => {
         const num = parseFloat(v) || 0;
@@ -193,19 +245,82 @@ function TeamsList() {
                             </div>
                             <div className="team-titles">
                                 {getTitleCount(team) > 0 && (
-                                    <div className="title-chips">
-                                        {getTitleYears(team).map(year => (
-                                            <span key={year} className="title-chip">
-                                                🏆 {year}
-                                                <button
-                                                    className="title-chip-remove"
-                                                    onClick={() => removeTitle(team, year)}
-                                                    aria-label={`Quitar título ${year}`}
-                                                >
-                                                    ✕
-                                                </button>
-                                            </span>
-                                        ))}
+                                    <div className="title-list">
+                                        {getTitleYears(team).map(year => {
+                                            const final = getTitleFinal(team, year);
+                                            const rivalName = getTeamName(final?.rivalId);
+                                            const isEditing = editingFinal?.teamId === team.id && editingFinal.year === year;
+                                            return (
+                                                <div key={year} className={`title-item ${isEditing ? 'editing' : ''}`}>
+                                                    <div className="title-row">
+                                                        <button
+                                                            className="title-row-main"
+                                                            onClick={() => openFinalEditor(team, year)}
+                                                            title="Editar rival y resultado de la final"
+                                                        >
+                                                            <span className="title-year">🏆 {year}</span>
+                                                            {rivalName || hasScore(final) ? (
+                                                                <span className="title-final">
+                                                                    {rivalName && <span className="title-final-rival">vs {rivalName}</span>}
+                                                                    {hasScore(final) && <span className="title-final-score">{final.score}-{final.rivalScore}</span>}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="title-final empty">+ Rival y resultado</span>
+                                                            )}
+                                                        </button>
+                                                        <button
+                                                            className="title-chip-remove"
+                                                            onClick={() => removeTitle(team, year)}
+                                                            aria-label={`Quitar título ${year}`}
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                    {isEditing && (
+                                                        <div className="final-editor">
+                                                            <label className="final-field">
+                                                                <span>Rival en la final</span>
+                                                                <select
+                                                                    value={editingFinal.rivalId}
+                                                                    onChange={(e) => setEditingFinal(prev => ({ ...prev, rivalId: e.target.value }))}
+                                                                >
+                                                                    <option value="">Sin rival</option>
+                                                                    {teams.filter(t => t.id !== team.id).map(t => (
+                                                                        <option key={t.id} value={t.id}>{t['Team Name']}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </label>
+                                                            <div className="final-field">
+                                                                <span>Resultado</span>
+                                                                <div className="final-score-inputs">
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        placeholder={team['Team ID'] || 'Campeón'}
+                                                                        value={editingFinal.score}
+                                                                        onChange={(e) => setEditingFinal(prev => ({ ...prev, score: e.target.value }))}
+                                                                        aria-label={`Puntos de ${team['Team Name']}`}
+                                                                    />
+                                                                    <span>-</span>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        placeholder="Rival"
+                                                                        value={editingFinal.rivalScore}
+                                                                        onChange={(e) => setEditingFinal(prev => ({ ...prev, rivalScore: e.target.value }))}
+                                                                        aria-label="Puntos del rival"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <div className="final-actions">
+                                                                <button onClick={() => setEditingFinal(null)}>Cancelar</button>
+                                                                <button className="btn-primary" onClick={() => saveFinal(team)}>Guardar</button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                         {getUntaggedTitles(team) > 0 && (
                                             <span className="title-chip untagged">
                                                 {getUntaggedTitles(team)} sin año

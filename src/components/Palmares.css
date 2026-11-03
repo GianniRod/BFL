@@ -159,15 +159,70 @@
 
 .palmares-years {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 4px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
     margin-top: 16px;
     padding-top: 14px;
     border-top: 1px solid var(--border);
 }
 
+.palmares-years > .palmares-year.untagged {
+    align-self: center;
+}
+
+/* One row per title: year · vs rival · score */
+.palmares-final {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    text-align: left;
+}
+
+.palmares-final-rival {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    color: var(--text-2);
+}
+
+.palmares-vs {
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-4);
+}
+
+.palmares-final-rival img {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: contain;
+    background: var(--surface-3);
+}
+
+.palmares-final-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.palmares-final-score {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
 .palmares-year {
+    flex-shrink: 0;
     font-size: 0.7rem;
     font-weight: 600;
     color: var(--text-2);
@@ -244,6 +299,13 @@
     .palmares-trophy {
         width: 42px;
         height: 56px;
+    }
+}
+
+/* Narrow phones: one card per row so rival and score fit */
+@media (max-width: 520px) {
+    .palmares-grid {
+        grid-template-columns: 1fr;
     }
 
     .palmares-info .team-name {

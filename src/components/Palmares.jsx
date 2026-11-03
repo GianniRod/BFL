@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { subscribeToTeams } from '../services/db';
-import { getTitleYears, getTitleCount, getUntaggedTitles } from '../services/titles';
+import { getTitleYears, getTitleCount, getUntaggedTitles, getTitleFinal, hasScore } from '../services/titles';
 import './Palmares.css';
 
 const TROPHY_IMG = 'https://i.postimg.cc/nLdpF6pY/IMG-7422.png';
 
 function Palmares() {
     const [teams, setTeams] = useState([]);
+    const [allTeams, setAllTeams] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const unsubscribe = subscribeToTeams((data) => {
+            setAllTeams(data);
             // Only teams with titles, most titles first (ties: most recent title first)
             const sortedTeams = data
                 .filter(team => getTitleCount(team) > 0)
@@ -78,12 +80,28 @@ function Palmares() {
                                 <span className="titles-label">
                                     {count === 1 ? 'TÍTULO' : 'TÍTULOS'}
                                 </span>
-                                {(years.length > 0 || untagged > 0) && (
+                                {years.length > 0 && (
                                     <div className="palmares-years">
-                                        {years.map(year => (
-                                            <span key={year} className="palmares-year">{year}</span>
-                                        ))}
-                                        {untagged > 0 && years.length > 0 && (
+                                        {years.map(year => {
+                                            const final = getTitleFinal(team, year);
+                                            const rival = allTeams.find(t => t.id === final?.rivalId);
+                                            return (
+                                                <div key={year} className="palmares-final">
+                                                    <span className="palmares-year">{year}</span>
+                                                    {rival && (
+                                                        <span className="palmares-final-rival">
+                                                            <span className="palmares-vs">vs</span>
+                                                            {rival['URL PHOTO'] && <img src={rival['URL PHOTO']} alt="" />}
+                                                            <span className="palmares-final-name">{rival['Team Name']}</span>
+                                                        </span>
+                                                    )}
+                                                    {hasScore(final) && (
+                                                        <span className="palmares-final-score">{final.score}-{final.rivalScore}</span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                        {untagged > 0 && (
                                             <span className="palmares-year untagged">+{untagged} sin año</span>
                                         )}
                                     </div>
