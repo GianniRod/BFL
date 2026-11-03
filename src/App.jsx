@@ -14,13 +14,12 @@ function App() {
     <Router>
       <div className="app-container">
         <Header />
-        <main style={{ padding: '20px' }}>
+        <main className="app-main">
           <Routes>
             <Route path="/" element={<TeamsList />} />
             <Route path="/fixture" element={
               <div className="fixture-page">
                 <FixtureBuilder />
-                <hr style={{ borderColor: '#333', margin: '30px 0' }} />
                 <MatchList />
               </div>
             } />
@@ -36,4 +35,3 @@ function App() {
 }
 
 export default App;
-
