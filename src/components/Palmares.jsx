@@ -3,6 +3,8 @@ import { subscribeToTeams } from '../services/db';
 import { getTitleYears, getTitleCount, getUntaggedTitles } from '../services/titles';
 import './Palmares.css';
 
+const TROPHY_IMG = 'https://i.postimg.cc/nLdpF6pY/IMG-7422.png';
+
 function Palmares() {
     const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -50,12 +52,25 @@ function Palmares() {
                     const untagged = getUntaggedTitles(team);
                     return (
                         <div key={team.id} className={`palmares-card ${index === 0 && hasSoleLeader ? 'champion' : ''}`}>
-                            <div className="palmares-logo">
-                                {team['URL PHOTO'] ? (
-                                    <img src={team['URL PHOTO']} alt={team['Team Name']} />
-                                ) : (
-                                    <div className="placeholder-logo">{team['Team ID']}</div>
-                                )}
+                            <div className="palmares-crest">
+                                <div className="palmares-logo">
+                                    {team['URL PHOTO'] ? (
+                                        <img src={team['URL PHOTO']} alt={team['Team Name']} />
+                                    ) : (
+                                        <div className="placeholder-logo">{team['Team ID']}</div>
+                                    )}
+                                </div>
+                                <div className="palmares-trophies" aria-label={`${count} ${count === 1 ? 'título' : 'títulos'}`}>
+                                    {Array.from({ length: count }, (_, i) => (
+                                        <img
+                                            key={i}
+                                            src={TROPHY_IMG}
+                                            alt=""
+                                            className="palmares-trophy"
+                                            title={years[i] ? `Campeón ${years[i]}` : 'Campeón'}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                             <div className="palmares-info">
                                 <h3 className="team-name">{team['Team Name']}</h3>
