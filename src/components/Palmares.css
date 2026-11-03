@@ -66,25 +66,24 @@
     color: var(--accent);
 }
 
+/* Logo and trophies flow together and wrap to new rows when there are many titles */
 .palmares-crest {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 8px 4px;
     margin-bottom: 16px;
 }
 
 .palmares-trophies {
-    display: flex;
-    flex-wrap: wrap;
-    align-content: center;
-    gap: 2px;
-    max-width: 104px; /* 4 per row */
+    display: contents;
 }
 
+/* Same height as the team logo */
 .palmares-trophy {
-    width: 24px;
-    height: 32px;
+    width: 54px;
+    height: 72px;
     object-fit: contain;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
     transition: transform 0.2s var(--ease);
@@ -239,17 +238,12 @@
     }
 
     .palmares-crest {
-        gap: 6px;
-    }
-
-    .palmares-trophies {
-        max-width: 54px; /* 3 per row */
-        gap: 0;
+        gap: 6px 2px;
     }
 
     .palmares-trophy {
-        width: 18px;
-        height: 24px;
+        width: 42px;
+        height: 56px;
     }
 
     .palmares-info .team-name {
