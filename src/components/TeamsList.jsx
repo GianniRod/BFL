@@ -17,7 +17,7 @@ function TeamsList() {
         return () => unsubscribe();
     }, []);
 
-    if (loading) return <div>Cargando equipos...</div>;
+    if (loading) return <div className="loading">Cargando equipos...</div>;
 
     if (teams.length === 0) {
         const seedTeams = async () => {
@@ -48,16 +48,16 @@ function TeamsList() {
         };
 
         return (
-            <div style={{ padding: '20px', border: '1px solid #333', borderRadius: '8px' }}>
+            <div className="teams-empty">
                 <h3>No hay equipos cargados</h3>
                 <p>La colección "teams" está vacía o no existe.</p>
-                <div style={{ margin: '20px 0', padding: '15px', background: '#220', border: '1px solid #550' }}>
-                    <strong>Modo Configuración:</strong>
+                <div className="teams-empty-setup">
+                    <strong>Modo Configuración</strong>
                     <p>Como es la primera vez, puedes crear los 12 equipos iniciales automáticamente.</p>
-                    <button onClick={seedTeams} style={{ background: '#d4af37', color: 'black', fontWeight: 'bold' }}>
+                    <button onClick={seedTeams} className="btn-primary">
                         Inicializar Base de Datos (12 Equipos)
                     </button>
-                    <p style={{ fontSize: '0.8em', marginTop: '10px' }}>
+                    <p className="teams-empty-note">
                         Nota: Esto requiere que las reglas de seguridad permitan escritura en "teams" temporalmente.
                         <br />
                         <code>match /teams/&#123;team&#125; &#123; allow write: if true; &#125;</code>
@@ -118,34 +118,53 @@ function TeamsList() {
     };
 
     return (
-        <div className="teams-grid">
-            {teams.map((team) => (
-                <div key={team.id} className="team-card">
-                    <div className="team-header">
-                        {team['URL PHOTO'] ? (
-                            <img src={team['URL PHOTO']} alt={team['Team Name']} className="team-logo" />
-                        ) : (
-                            <div className="placeholder-logo">{team['Team ID']}</div>
-                        )}
-                        <h3>{team['Team Name']}</h3>
-                    </div>
-                    <div className="team-details">
-                        <p><strong>ID:</strong> {team['Team ID']}</p>
-                        <p><strong>Ciudad:</strong> {team['City']}</p>
-                        <p><strong>Títulos:</strong> {team['League Titles']}</p>
-                        <div className="stars">
-                            <div className="star-row">
-                                <span className="star-label">Ofensiva:</span>
-                                <StarEditor teamId={team.id} field="Offensive Stars" value={team['Offensive Stars']} />
+        <div className="teams-page">
+            <div className="page-header">
+                <div>
+                    <div className="page-eyebrow">BFL</div>
+                    <h2 className="page-title">Equipos</h2>
+                </div>
+                <span className="page-meta">{teams.length} equipos</span>
+            </div>
+            <div className="teams-grid">
+                {teams.map((team) => (
+                    <div key={team.id} className="team-card">
+                        <div className="team-header">
+                            {team['URL PHOTO'] ? (
+                                <img src={team['URL PHOTO']} alt={team['Team Name']} className="team-logo" />
+                            ) : (
+                                <div className="placeholder-logo">{team['Team ID']}</div>
+                            )}
+                            <div className="team-heading">
+                                <h3>{team['Team Name']}</h3>
+                                <span className="team-city">{team['City']}</span>
                             </div>
-                            <div className="star-row">
-                                <span className="star-label">Defensa:</span>
-                                <StarEditor teamId={team.id} field="Deffensive Stars" value={team['Deffensive Stars']} />
+                        </div>
+                        <div className="team-details">
+                            <div className="team-meta">
+                                <div className="team-meta-item">
+                                    <span className="team-meta-label">ID</span>
+                                    <span className="team-meta-value">{team['Team ID']}</span>
+                                </div>
+                                <div className="team-meta-item">
+                                    <span className="team-meta-label">Títulos</span>
+                                    <span className="team-meta-value">{team['League Titles']}</span>
+                                </div>
+                            </div>
+                            <div className="stars">
+                                <div className="star-row">
+                                    <span className="star-label">Ofensiva</span>
+                                    <StarEditor teamId={team.id} field="Offensive Stars" value={team['Offensive Stars']} />
+                                </div>
+                                <div className="star-row">
+                                    <span className="star-label">Defensa</span>
+                                    <StarEditor teamId={team.id} field="Deffensive Stars" value={team['Deffensive Stars']} />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 }

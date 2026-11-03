@@ -31,7 +31,8 @@ function Palmares() {
 
     return (
         <div className="palmares-container">
-            <h2 className="palmares-title">Palmares</h2>
+            <div className="page-eyebrow">Historial</div>
+            <h2 className="palmares-title">Palmarés</h2>
             <p className="palmares-subtitle">Campeones de la BFL</p>
 
             <div className="palmares-grid">

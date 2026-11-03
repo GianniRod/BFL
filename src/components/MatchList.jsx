@@ -190,7 +190,7 @@ function MatchList() {
 
     return (
         <div className="fixture-match-list">
-            <h2 style={{ textAlign: 'center', marginBottom: '20px', fontSize: '1.5rem' }}>Partidos Programados</h2>
+            <h2>Partidos Programados</h2>
             <div className="fixture-matches-container">
                 {matches.map(match => {
                     const home = getTeamById(match.homeTeamId);

@@ -1127,11 +1127,11 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                                             />
                                         </div>
                                         <button className="sim-skip-btn" onClick={skipToEnd}>Fin</button>
-                                        <button className="sim-reset-btn" onClick={handleReset} style={{ marginLeft: '10px', background: '#e53935' }}>Reiniciar</button>
+                                        <button className="sim-reset-btn sim-danger" onClick={handleReset}>Reiniciar</button>
                                     </>
                                 )}
                                 {phase === 'finished' && onReset && (
-                                    <button className="sim-reset-btn" onClick={handleReset} style={{ marginLeft: '10px', background: '#e53935' }}>Reiniciar Partido</button>
+                                    <button className="sim-reset-btn sim-danger" onClick={handleReset}>Reiniciar Partido</button>
                                 )}
                             </div>
                         </div>
@@ -1205,7 +1205,7 @@ function GameSimulator({ localTeam, visitanteTeam, isLocalHome, onFinish, onClos
                             <button className="sim-save-btn" onClick={handleSave}>Guardar Resultado</button>
                         )}
                         {onReset && (
-                            <button className="sim-reset-btn" onClick={handleReset} style={{ background: '#e53935', borderColor: '#b71c1c', marginTop: '10px', width: '100%', padding: '12px', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                            <button className="sim-reset-btn sim-danger sim-reset-full" onClick={handleReset}>
                                 Reiniciar Partido
                             </button>
                         )}

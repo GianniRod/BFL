@@ -1,77 +1,140 @@
 .fixture-builder,
 .match-list {
-    background-color: #111;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 2rem;
-    border: 1px solid #333;
+    background: var(--surface-1);
+    padding: 22px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.fixture-builder h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 18px;
 }
 
 .fixture-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    align-items: flex-end;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.fixture-form button[type="submit"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+    font-weight: 700;
+    height: 40px;
+    padding: 0 22px;
+}
+
+.fixture-form button[type="submit"]:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    text-align: left;
+    gap: 6px;
+    min-width: 0;
 }
 
 .form-group label {
-    margin-bottom: 5px;
-    font-size: 0.9em;
-    color: #ccc;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-3);
+}
+
+.form-group select,
+.form-group input {
+    width: 100%;
+    height: 40px;
 }
 
 .message {
-    margin-top: 15px;
-    color: #4CAF50;
-    /* Green for success */
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: var(--success);
 }
 
 .match-card {
-    background-color: #1a1a1a;
-    border: 1px solid #333;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 14px;
+    margin-bottom: 8px;
+    border-radius: var(--radius-sm);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .match-date {
-    font-size: 0.85em;
-    color: #888;
+    font-size: 0.8rem;
+    color: var(--text-3);
 }
 
 .match-teams {
-    font-weight: bold;
-    font-size: 1.1em;
+    font-weight: 700;
 }
 
 .vs {
     margin: 0 10px;
-    color: #555;
-    font-size: 0.9em;
+    color: var(--text-4);
+    font-size: 0.85em;
 }
 
 .no-matches {
-    color: #777;
+    color: var(--text-3);
     margin-top: 20px;
 }
 
 /* ── Fixture Match List (reuses Liga card styles) ── */
 .fixture-match-list {
-    max-width: 800px;
-    margin: 0 auto;
+    width: 100%;
+}
+
+.fixture-match-list > h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 14px;
 }
 
 .fixture-matches-container {
     display: flex;
     flex-direction: column;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.fixture-matches-container:empty {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .fixture-builder {
+        padding: 16px;
+    }
+
+    .fixture-form {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .fixture-form .form-group:nth-child(3),
+    .fixture-form button[type="submit"] {
+        grid-column: 1 / -1;
+    }
+
+    .fixture-form button[type="submit"] {
+        height: 44px;
+    }
+
+    .form-group select,
+    .form-group input {
+        height: 44px;
+    }
 }
