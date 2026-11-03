@@ -2,8 +2,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { subscribeToMatches, subscribeToTeams, updateMatch } from '../services/db';
 import GameSimulator, { simulateGame } from './GameSimulator';
+import { loadLiveSims, saveLiveSims, persistOnPageHide } from '../services/liveSims';
 import './Fixture.css';
 import './Liga.css';
+
+const LIVE_SIMS_KEY = 'bfl_fixture_sims';
 
 function MatchList() {
     const [matches, setMatches] = useState([]);
@@ -116,16 +119,6 @@ function MatchList() {
                         broadcastTime: sim.result.broadcastTime || null,
                         scoreByQuarter: sim.result.scoreByQuarter || null
                     }).catch(err => console.error("Error auto-saving fixture:", err));
-
-                    try {
-                        const saved = JSON.parse(localStorage.getItem('bfl_fixture_sims') || '{}');
-                        delete saved[mid];
-                        if (Object.keys(saved).length > 0) {
-                            localStorage.setItem('bfl_fixture_sims', JSON.stringify(saved));
-                        } else {
-                            localStorage.removeItem('bfl_fixture_sims');
-                        }
-                    } catch (e) { }
                 }
 
                 delete activeSimsRef.current[mid];
@@ -140,10 +133,18 @@ function MatchList() {
 
             if (hasChanges) {
                 updateLiveUI();
+                saveLiveSims(LIVE_SIMS_KEY, activeSimsRef.current);
             }
         }, 100);
 
         return () => clearInterval(ticker);
+    }, []);
+
+    // Restore live simulations exactly where they were left (paused while the app was closed)
+    useEffect(() => {
+        activeSimsRef.current = loadLiveSims(LIVE_SIMS_KEY);
+        updateLiveUI();
+        return persistOnPageHide(LIVE_SIMS_KEY, () => activeSimsRef.current);
     }, []);
 
     const startLiveSimulation = (matchId, localTeam, visitanteTeam) => {
@@ -165,6 +166,7 @@ function MatchList() {
             lastTickTime: Date.now()
         };
         updateLiveUI();
+        saveLiveSims(LIVE_SIMS_KEY, activeSimsRef.current);
     };
 
     const formatMatchDate = (dateStr) => {
@@ -306,6 +308,7 @@ function MatchList() {
                     onSpeedChange={(newSpeed) => {
                         if (activeSimsRef.current[simulatingMatch.matchId]) {
                             activeSimsRef.current[simulatingMatch.matchId].speed = newSpeed;
+                            saveLiveSims(LIVE_SIMS_KEY, activeSimsRef.current);
                         }
                     }}
                     onSkipToEnd={() => {
@@ -340,15 +343,7 @@ function MatchList() {
                         if (activeSimsRef.current[simulatingMatch.matchId]) {
                             delete activeSimsRef.current[simulatingMatch.matchId];
                         }
-                        try {
-                            const saved = JSON.parse(localStorage.getItem('bfl_fixture_sims') || '{}');
-                            delete saved[simulatingMatch.matchId];
-                            if (Object.keys(saved).length > 0) {
-                                localStorage.setItem('bfl_fixture_sims', JSON.stringify(saved));
-                            } else {
-                                localStorage.removeItem('bfl_fixture_sims');
-                            }
-                        } catch (e) { }
+                        saveLiveSims(LIVE_SIMS_KEY, activeSimsRef.current);
                         updateLiveUI();
 
                         await updateMatch(simulatingMatch.matchId, {

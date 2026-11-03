@@ -5,8 +5,10 @@ import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import './Cup.css';
 import './Liga.css';
 import GameSimulator, { simulateGame, simulateOvertime, parseStarValue } from './GameSimulator';
+import { loadLiveSims, saveLiveSims, persistOnPageHide } from '../services/liveSims';
 
 const YEARS = [2024, 2025, 2026];
+const LIVE_SIMS_KEY = 'bfl_playoffs_sims';
 const PHASE_KEYS = ['cuartos', 'semis', 'final'];
 const PHASE_NAMES = {
     cuartos: 'Cuartos',
@@ -102,9 +104,19 @@ function Playoffs() {
                 setSimulatingMatch(prev => prev && prev.simId === pid ? { ...prev, readOnly: true } : prev);
                 hasChanges = true;
             });
-            if (hasChanges) updateLiveUI();
+            if (hasChanges) {
+                updateLiveUI();
+                saveLiveSims(LIVE_SIMS_KEY, activeSimsRef.current);
+            }
         }, 100);
         return () => clearInterval(ticker);
+    }, []);
+
+    // Restore live simulations exactly where they were left (paused while the app was closed)
+    useEffect(() => {
+        activeSimsRef.current = loadLiveSims(LIVE_SIMS_KEY);
+        updateLiveUI();
+        return persistOnPageHide(LIVE_SIMS_KEY, () => activeSimsRef.current);
     }, []);
 
     // Determine if home advantage applies for a given phase
@@ -126,6 +138,7 @@ function Playoffs() {
         );
         activeSimsRef.current[simId] = { phaseKey, matchupId, legKey, result, currentIndex: 0, speed: 1, lastTickTime: Date.now() };
         updateLiveUI();
+        saveLiveSims(LIVE_SIMS_KEY, activeSimsRef.current);
     };
 
     // ── Firestore ──
@@ -587,7 +600,7 @@ function Playoffs() {
                         localTeam={localT} visitanteTeam={visitanteT} isLocalHome={isHome}
                         matchDateTime={leg.dateTime} readOnlyResult={readOnlyData} liveEngine={liveEngine}
                         onStartLive={() => startLiveSimulation(simulatingMatch.phaseKey, simulatingMatch.matchupId, simulatingMatch.legKey, localT, visitanteT, simId)}
-                        onSpeedChange={(s) => { if (liveEngine) { liveEngine.speed = s; liveEngine.lastTickTime = Date.now(); updateLiveUI(); } }}
+                        onSpeedChange={(s) => { if (liveEngine) { liveEngine.speed = s; liveEngine.lastTickTime = Date.now(); updateLiveUI(); saveLiveSims(LIVE_SIMS_KEY, activeSimsRef.current); } }}
                         onSkipToEnd={() => { if (liveEngine) { liveEngine.currentIndex = liveEngine.result.log.length; updateLiveUI(); } }}
                         onSimulateUntil={(ts) => { if (liveEngine) { let ti = liveEngine.result.log.findIndex(p => p.broadcastTime >= ts); if (ti === -1) ti = liveEngine.result.log.length; liveEngine.targetIndex = ti; } }}
                         onFinish={(lS, vS, st, sp, tp, dc, bt, sbq) => {
@@ -597,6 +610,7 @@ function Playoffs() {
                         onClose={() => setSimulatingMatch(null)}
                         onReset={async () => {
                             if (activeSimsRef.current[simId]) delete activeSimsRef.current[simId];
+                            saveLiveSims(LIVE_SIMS_KEY, activeSimsRef.current);
                             updateLiveUI();
                             await resetLeg(simulatingMatch.phaseKey, simulatingMatch.matchupId, simulatingMatch.legKey);
                             setSimulatingMatch(null);
@@ -632,6 +646,7 @@ function Playoffs() {
                                 speed: 1,
                                 lastTickTime: Date.now(),
                             };
+                            saveLiveSims(LIVE_SIMS_KEY, activeSimsRef.current);
                             setSimulatingMatch(prev => ({ ...prev, readOnly: false }));
                             updateLiveUI();
                         }}
