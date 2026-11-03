@@ -29,7 +29,7 @@
 }
 
 .header-logo {
-    height: 44px;
+    height: 54px;
     width: auto;
     object-fit: contain;
     display: block;
@@ -88,7 +88,7 @@
     }
 
     .header-logo {
-        height: 36px;
+        height: 48px;
     }
 
     .top-nav {

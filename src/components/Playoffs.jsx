@@ -286,7 +286,9 @@ function Playoffs() {
 
             {champion && (
                 <div className="cup-champion-banner">
-                    <span className="trophy">🏆</span>
+                    <span className="trophy trophy-img">
+                        <img src="https://i.postimg.cc/nLdpF6pY/IMG-7422.png" alt="Trofeo" />
+                    </span>
                     <div className="champion-title">Campeón Playoffs</div>
                     <div className="champion-name">
                         {champion['URL PHOTO'] && <img src={champion['URL PHOTO']} alt="" />}

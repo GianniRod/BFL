@@ -41,7 +41,7 @@ function Header() {
             <header className="app-header">
                 <div className="app-header-inner">
                     <NavLink to="/" className="logo" aria-label="Inicio">
-                        <img src="https://i.postimg.cc/ZYx0Dhqb/BRASIL-2.png" alt="BFL" className="header-logo" />
+                        <img src="https://i.postimg.cc/JzxWx9DL/IMG-7418.jpg" alt="BFL" className="header-logo" />
                     </NavLink>
                     <nav className="top-nav">
                         {NAV_ITEMS.map(item => (
